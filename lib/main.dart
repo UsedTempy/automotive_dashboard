@@ -26,11 +26,12 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
-  int leftTemp = 22;
-  int rightTemp = 22;
+class _DashboardScreenState extends State<DashboardScreen>
+    with SingleTickerProviderStateMixin {
   late String currentTime;
-  String selectedCenterButton = "gps";
+  String selectedCenterButton = "gps"; // GPS auto selected
+  bool fanActive = false;
+  double fanSliderValue = 0.5;
 
   @override
   void initState() {
@@ -47,8 +48,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final period = now.hour >= 12 ? "PM" : "AM";
 
     setState(() {
-      currentTime =
-      "$hour12:${now.minute.toString().padLeft(2, '0')} $period";
+      currentTime = "$hour12:${now.minute.toString().padLeft(2, '0')} $period";
     });
   }
 
@@ -56,12 +56,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() => selectedCenterButton = button);
   }
 
-  void increaseLeftTemp() => setState(() => leftTemp++);
-  void decreaseLeftTemp() => setState(() => leftTemp--);
-  void increaseRightTemp() => setState(() => rightTemp++);
-  void decreaseRightTemp() => setState(() => rightTemp--);
+  void _toggleFan() {
+    setState(() => fanActive = !fanActive);
+  }
 
-  String get currentTemperature => "${((leftTemp + rightTemp) / 2).round()}°C";
+  Color _getSliderThumbColor(double value) {
+    return Color.lerp(Colors.blue, Colors.red, value)!;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,75 +83,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   offset: const Offset(0, 10))
             ],
           ),
-          child: Column(
+          child: Stack(
             children: [
-              // Top bar
-              Container(
-                height: 50,
-                padding: const EdgeInsets.symmetric(horizontal: 25),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF151515),
-                  border: Border(bottom: BorderSide(color: Color(0xFF252525))),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Automotive Dashboard",
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFE0E0E0)),
+              Column(
+                children: [
+                  // Top bar
+                  Container(
+                    height: 50,
+                    padding: const EdgeInsets.symmetric(horizontal: 25),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF151515),
+                      border:
+                      Border(bottom: BorderSide(color: Color(0xFF252525))),
                     ),
-                    Row(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(currentTemperature,
-                            style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFFE0E0E0))),
-                        const SizedBox(width: 15),
+                        const Text(
+                          "Automotive Dashboard",
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFE0E0E0)),
+                        ),
                         Text(currentTime,
                             style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                                 color: Color(0xFFE0E0E0))),
                       ],
-                    )
-                  ],
-                ),
-              ),
-              // Map area
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF0F0F0F),
-                    border: Border(bottom: BorderSide(color: Color(0xFF252525))),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      "Map Placeholder",
-                      style: TextStyle(color: Colors.white24, fontSize: 24),
                     ),
                   ),
-                ),
-              ),
-              // Climate controls + center buttons
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF111111),
-                  border: Border(top: BorderSide(color: Color(0xFF252525))),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ClimateControl(
-                        temp: leftTemp,
-                        onIncrease: increaseLeftTemp,
-                        onDecrease: decreaseLeftTemp),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                  // Map area
+                  Expanded(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF0F0F0F),
+                        border: Border(
+                            bottom: BorderSide(color: Color(0xFF252525))),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          "Map Placeholder",
+                          style: TextStyle(
+                              color: Colors.white24, fontSize: 24),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Center buttons row
+                  Container(
+                    height: 70,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 30, vertical: 10),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF111111),
+                      border:
+                      Border(top: BorderSide(color: Color(0xFF252525))),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         _CenterButton(
                             icon: FontAwesomeIcons.locationDot,
@@ -168,13 +161,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             onTap: () => _selectCenterButton("camera")),
                       ],
                     ),
-                    ClimateControl(
-                        temp: rightTemp,
-                        onIncrease: increaseRightTemp,
-                        onDecrease: decreaseRightTemp),
+                  ),
+                ],
+              ),
+              // Fan button and slider
+              Positioned(
+                bottom: 10,
+                right: 30,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (fanActive)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 36),
+                        child: SizedBox(
+                          height: 180,
+                          width: 30,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Static gradient track
+                              Container(
+                                width: 6,
+                                height: 160,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(3),
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [Colors.blue, Colors.red],
+                                  ),
+                                ),
+                              ),
+                              // Thumb
+                              _FanSliderThumb(
+                                value: fanSliderValue,
+                                onChanged: (v) =>
+                                    setState(() => fanSliderValue = v),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    _CenterButton(
+                      icon: FontAwesomeIcons.fan,
+                      isSelected: fanActive,
+                      onTap: _toggleFan,
+                      activeColor: Colors.yellow,
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -183,167 +220,124 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class ClimateControl extends StatefulWidget {
-  final int temp;
-  final VoidCallback onIncrease;
-  final VoidCallback onDecrease;
+class _FanSliderThumb extends StatefulWidget {
+  final double value;
+  final Function(double) onChanged;
 
-  const ClimateControl({
-    required this.temp,
-    required this.onIncrease,
-    required this.onDecrease,
-    super.key,
-  });
+  const _FanSliderThumb({super.key, required this.value, required this.onChanged});
 
   @override
-  State<ClimateControl> createState() => _ClimateControlState();
+  State<_FanSliderThumb> createState() => _FanSliderThumbState();
 }
 
-class _ClimateControlState extends State<ClimateControl> {
-  bool _hoveringUp = false;
-  bool _hoveringDown = false;
+class _FanSliderThumbState extends State<_FanSliderThumb>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _scaleController;
+  late Animation<double> _scaleAnim;
 
-  Widget buildArrow({
-    required bool hovering,
-    required Color color,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return StatefulBuilder(
-      builder: (context, setLocalState) {
-        bool clicked = false;
-
-        void handleTap() {
-          setLocalState(() => clicked = true);
-          onTap();
-
-          // Fade out the click glow
-          Future.delayed(const Duration(milliseconds: 200), () {
-            if (mounted) setLocalState(() => clicked = false);
-          });
-        }
-
-        return MouseRegion(
-          onEnter: (_) => setState(() {
-            if (icon == FontAwesomeIcons.chevronUp) _hoveringUp = true;
-            else _hoveringDown = true;
-          }),
-          onExit: (_) => setState(() {
-            if (icon == FontAwesomeIcons.chevronUp) _hoveringUp = false;
-            else _hoveringDown = false;
-          }),
-          child: GestureDetector(
-            onTap: handleTap,
-            child: SizedBox(
-              width: 22,
-              height: 22,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Hover glow
-                  AnimatedOpacity(
-                    opacity: hovering ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: color,
-                        boxShadow: [
-                          BoxShadow(
-                              color: color.withOpacity(0.5),
-                              blurRadius: 10,
-                              spreadRadius: 2)
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Click glow
-                  AnimatedOpacity(
-                    opacity: clicked ? 0.3 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: color.withOpacity(0.4),
-                        boxShadow: [
-                          BoxShadow(
-                              color: color.withOpacity(0.7),
-                              blurRadius: 15,
-                              spreadRadius: 5),
-                        ],
-                      ),
-                    ),
-                  ),
-                  FaIcon(icon, color: color, size: 14),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+  @override
+  void initState() {
+    super.initState();
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150), // quick press/release
     );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 1.3)
+        .animate(CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut));
+  }
+
+  void _onPress() {
+    _scaleController.forward(from: 0); // scale up quickly
+  }
+
+  void _onRelease() {
+    _scaleController.reverse(from: 1.0); // scale back quickly
+  }
+
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2C2C2C),
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Decrease arrow
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: buildArrow(
-                hovering: _hoveringDown,
-                color: Colors.blue,
-                icon: FontAwesomeIcons.chevronDown,
-                onTap: widget.onDecrease),
-          ),
-          // Temperature text right next to fan icon
-          SizedBox(
-            width: 35,
-            child: Center(
-                child: Text("${widget.temp}°",
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600))),
-          ),
-          const FaIcon(FontAwesomeIcons.fan, size: 14, color: Colors.white),
-          // Increase arrow
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: buildArrow(
-                hovering: _hoveringUp,
-                color: Colors.red,
-                icon: FontAwesomeIcons.chevronUp,
-                onTap: widget.onIncrease),
-          ),
-        ],
-      ),
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final trackHeight = constraints.maxHeight;
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragStart: (details) {
+          _onPress();
+          double newValue = 1 - (details.localPosition.dy / trackHeight);
+          newValue = newValue.clamp(0.0, 1.0);
+          widget.onChanged(newValue);
+        },
+        onVerticalDragUpdate: (details) {
+          double newValue = 1 - (details.localPosition.dy / trackHeight);
+          newValue = newValue.clamp(0.0, 1.0);
+          widget.onChanged(newValue);
+        },
+        onVerticalDragEnd: (_) => _onRelease(),
+        onTapDown: (details) {
+          _onPress();
+          double newValue = 1 - (details.localPosition.dy / trackHeight);
+          newValue = newValue.clamp(0.0, 1.0);
+          widget.onChanged(newValue);
+        },
+        onTapUp: (_) => _onRelease(),
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Positioned(
+              bottom: 0,
+              child: AnimatedBuilder(
+                animation: _scaleAnim,
+                builder: (context, child) {
+                  double pos = (trackHeight - 20) * widget.value;
+                  Color color =
+                  Color.lerp(Colors.blue, Colors.red, widget.value)!;
+                  return Transform.translate(
+                    offset: Offset(0, -pos),
+                    child: Transform.scale(
+                      scale: _scaleAnim.value,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                                color: color.withOpacity(0.6),
+                                blurRadius: 8,
+                                spreadRadius: 2)
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
 
-// Center buttons (unchanged)
+// Center button widget
 class _CenterButton extends StatefulWidget {
   final IconData icon;
   final bool isSelected;
   final VoidCallback onTap;
+  final Color activeColor;
 
   const _CenterButton({
     required this.icon,
     required this.isSelected,
     required this.onTap,
+    this.activeColor = Colors.blue,
   });
 
   @override
@@ -354,51 +348,34 @@ class _CenterButtonState extends State<_CenterButton>
     with TickerProviderStateMixin {
   late AnimationController _hoverController;
   late Animation<double> _hoverAnim;
-
   late AnimationController _colorController;
   late Animation<Color?> _iconColorAnim;
-
   late AnimationController _bounceController;
   late Animation<double> _bounceAnim;
 
   bool _hovering = false;
-
   final double selectedWidth = 20;
   final double hoverWidth = 25;
 
   @override
   void initState() {
     super.initState();
+    _hoverController =
+        AnimationController(duration: const Duration(milliseconds: 180), vsync: this);
+    _hoverAnim = Tween<double>(begin: selectedWidth, end: hoverWidth)
+        .animate(CurvedAnimation(parent: _hoverController, curve: Curves.easeOutBack));
 
-    // Hover controller for growth of selected blue underline
-    _hoverController = AnimationController(
-      duration: const Duration(milliseconds: 180),
-      vsync: this,
-    );
-    _hoverAnim = Tween<double>(begin: selectedWidth, end: hoverWidth).animate(
-      CurvedAnimation(parent: _hoverController, curve: Curves.easeOutBack),
-    );
+    _colorController =
+        AnimationController(duration: const Duration(milliseconds: 100), vsync: this);
+    _iconColorAnim =
+        ColorTween(begin: const Color(0xFF555555), end: Colors.white70)
+            .animate(_colorController);
 
-    // Icon color tween
-    _colorController = AnimationController(
-      duration: const Duration(milliseconds: 100),
-      vsync: this,
-    );
-    _iconColorAnim = ColorTween(
-      begin: const Color(0xFF555555), // darker gray
-      end: Colors.white70,
-    ).animate(_colorController);
+    _bounceController =
+        AnimationController(duration: const Duration(milliseconds: 400), vsync: this);
+    _bounceAnim = Tween<double>(begin: selectedWidth, end: hoverWidth)
+        .animate(CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut));
 
-    // Bounce controller for selected underline
-    _bounceController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    _bounceAnim = Tween<double>(begin: selectedWidth, end: hoverWidth).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut),
-    );
-
-    // Initial state for selected
     if (widget.isSelected) {
       _colorController.value = 1.0;
       _bounceController.forward(from: 0);
@@ -408,8 +385,6 @@ class _CenterButtonState extends State<_CenterButton>
   @override
   void didUpdateWidget(_CenterButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // Animate icon color and play bounce when selected
     if (widget.isSelected != oldWidget.isSelected) {
       if (widget.isSelected) {
         _colorController.forward();
@@ -439,11 +414,6 @@ class _CenterButtonState extends State<_CenterButton>
     }
   }
 
-  Color _getGrayColor() {
-    if (_hovering) return Colors.grey[300]!; // light gray on hover
-    return Colors.grey[700]!; // default darker gray
-  }
-
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
@@ -458,7 +428,6 @@ class _CenterButtonState extends State<_CenterButton>
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // Icon with color tween
               AnimatedBuilder(
                 animation: _iconColorAnim,
                 builder: (_, __) {
@@ -469,8 +438,6 @@ class _CenterButtonState extends State<_CenterButton>
                   );
                 },
               ),
-
-              // Gray hover underline (unselected)
               if (!widget.isSelected)
                 Positioned(
                   bottom: 2,
@@ -480,20 +447,17 @@ class _CenterButtonState extends State<_CenterButton>
                     width: _hovering ? hoverWidth : 0,
                     height: 2,
                     decoration: BoxDecoration(
-                      color: _getGrayColor(),
+                      color: _hovering ? Colors.grey[300] : Colors.grey[700],
                       borderRadius: BorderRadius.circular(1),
                     ),
                   ),
                 ),
-
-              // Blue underline for selected (always visible + elastic bounce on select)
               if (widget.isSelected)
                 Positioned(
                   bottom: 2,
                   child: AnimatedBuilder(
                     animation: Listenable.merge([_hoverController, _bounceController]),
                     builder: (_, __) {
-                      // Width is max of hover growth and bounce animation
                       double width = _hoverAnim.value;
                       if (_bounceController.isAnimating) {
                         width = _bounceAnim.value;
@@ -502,7 +466,7 @@ class _CenterButtonState extends State<_CenterButton>
                         height: 2,
                         width: width,
                         decoration: BoxDecoration(
-                          color: Colors.blue,
+                          color: widget.activeColor,
                           borderRadius: BorderRadius.circular(1),
                         ),
                       );
