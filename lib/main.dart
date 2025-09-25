@@ -12,7 +12,7 @@ class CarDashboardApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Car Dashboard Mockup',
+      title: 'Dashboard Mockup',
       theme: ThemeData.dark(useMaterial3: true),
       home: const DashboardScreen(),
     );
