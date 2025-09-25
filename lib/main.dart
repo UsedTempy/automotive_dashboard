@@ -294,7 +294,7 @@ class _ClimateControlState extends State<ClimateControl> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: const Color(0xFF2C2C2C),
-        borderRadius: BorderRadius.circular(25),g
+        borderRadius: BorderRadius.circular(25),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
