@@ -174,10 +174,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                             circles: [
                               CircleMarker(
                                 point: currentLocation!,
-                                radius: 8,
+                                radius: 5,
                                 color: Colors.blue.withOpacity(0.9),
-                                borderStrokeWidth: 2,
-                                borderColor: Colors.white,
+                                borderStrokeWidth: 2.5,
+                                borderColor: Colors.white.withOpacity(0.7),
                               ),
                             ],
                           ),
