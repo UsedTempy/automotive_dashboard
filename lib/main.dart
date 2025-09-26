@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async  {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is initialized
+  try {
+    await dotenv.load(fileName: ".env"); // Load environment variables
+  } catch (e) {
+    throw Exception('Error loading .env file: $e'); // Print error if any
+  }
+
+  final String apiKey = dotenv.env['ACCESS_TOKEN'] ?? 'default_key';
+  print(apiKey);
+
   runApp(const CarDashboardApp());
 }
 
