@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 void main() {
   runApp(const CarDashboardApp());
@@ -32,6 +33,11 @@ class _DashboardScreenState extends State<DashboardScreen>
   String selectedCenterButton = "gps"; // GPS auto selected
   bool fanActive = false;
   double fanSliderValue = 0.5;
+  int fanSpeed = 1; // Fan speed setting (1-3)
+
+  // Defrost buttons state
+  bool frontDefrost = false;
+  bool rearDefrost = false;
 
   @override
   void initState() {
@@ -60,6 +66,26 @@ class _DashboardScreenState extends State<DashboardScreen>
     setState(() => fanActive = !fanActive);
   }
 
+  void _decreaseFanSpeed() {
+    if (fanSpeed > 1) {
+      setState(() => fanSpeed--);
+    }
+  }
+
+  void _increaseFanSpeed() {
+    if (fanSpeed < 3) {
+      setState(() => fanSpeed++);
+    }
+  }
+
+  void _toggleFrontDefrost() {
+    setState(() => frontDefrost = !frontDefrost);
+  }
+
+  void _toggleRearDefrost() {
+    setState(() => rearDefrost = !rearDefrost);
+  }
+
   Color _getSliderThumbColor(double value) {
     return Color.lerp(Colors.blue, Colors.red, value)!;
   }
@@ -84,37 +110,10 @@ class _DashboardScreenState extends State<DashboardScreen>
             ],
           ),
           child: Stack(
+            alignment: Alignment.topCenter,
             children: [
               Column(
                 children: [
-                  // Top bar
-                  Container(
-                    height: 50,
-                    padding: const EdgeInsets.symmetric(horizontal: 25),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF151515),
-                      border:
-                      Border(bottom: BorderSide(color: Color(0xFF252525))),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Automotive Dashboard",
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFFE0E0E0)),
-                        ),
-                        Text(currentTime,
-                            style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFFE0E0E0))),
-                      ],
-                    ),
-                  ),
-                  // Map area
                   Expanded(
                     child: Container(
                       decoration: const BoxDecoration(
@@ -125,8 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                       child: const Center(
                         child: Text(
                           "Map Placeholder",
-                          style: TextStyle(
-                              color: Colors.white24, fontSize: 24),
+                          style: TextStyle(color: Colors.white24, fontSize: 24),
                         ),
                       ),
                     ),
@@ -138,31 +136,60 @@ class _DashboardScreenState extends State<DashboardScreen>
                         horizontal: 30, vertical: 10),
                     decoration: const BoxDecoration(
                       color: Color(0xFF111111),
-                      border:
-                      Border(top: BorderSide(color: Color(0xFF252525))),
+                      border: Border(top: BorderSide(color: Color(0xFF252525))),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         _CenterButton(
-                            icon: FontAwesomeIcons.locationDot,
-                            isSelected: selectedCenterButton == "gps",
-                            onTap: () => _selectCenterButton("gps")),
+                          icon: FontAwesomeIcons.locationDot,
+                          isSelected: selectedCenterButton == "gps",
+                          onTap: () => _selectCenterButton("gps"),
+                        ),
                         const SizedBox(width: 12),
                         _CenterButton(
-                            icon: FontAwesomeIcons.music,
-                            isSelected: selectedCenterButton == "music",
-                            onTap: () => _selectCenterButton("music")),
+                          icon: FontAwesomeIcons.music,
+                          isSelected: selectedCenterButton == "music",
+                          onTap: () => _selectCenterButton("music"),
+                        ),
                         const SizedBox(width: 12),
                         _CenterButton(
-                            icon: FontAwesomeIcons.camera,
-                            isSelected: selectedCenterButton == "camera",
-                            onTap: () => _selectCenterButton("camera")),
+                          icon: FontAwesomeIcons.camera,
+                          isSelected: selectedCenterButton == "camera",
+                          onTap: () => _selectCenterButton("camera"),
+                        ),
                       ],
                     ),
                   ),
                 ],
+              ),
+              // Floating island with time
+              Positioned(
+                top: 15,
+                child: Container(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1C1C1C),
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
+                  ),
+                  child: Text(
+                    currentTime,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFE0E0E0),
+                    ),
+                  ),
+                ),
               ),
               // Fan button and slider
               Positioned(
@@ -180,7 +207,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
-                              // Static gradient track
                               Container(
                                 width: 6,
                                 height: 160,
@@ -193,7 +219,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   ),
                                 ),
                               ),
-                              // Thumb
                               _FanSliderThumb(
                                 value: fanSliderValue,
                                 onChanged: (v) =>
@@ -203,10 +228,71 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ),
                         ),
                       ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 28,
+                          child: fanActive && fanSpeed > 1
+                              ? GestureDetector(
+                            onTap: _decreaseFanSpeed,
+                            child: const Padding(
+                              padding: EdgeInsets.all(4.0),
+                              child: Icon(
+                                Icons.chevron_left,
+                                color: Colors.white70,
+                                size: 20,
+                              ),
+                            ),
+                          )
+                              : null,
+                        ),
+                        _CenterButton(
+                          icon: FontAwesomeIcons.fan,
+                          isSelected: fanActive,
+                          onTap: _toggleFan,
+                          activeColor: Colors.yellow,
+                          fanSpeed: fanSpeed,
+                        ),
+                        SizedBox(
+                          width: 28,
+                          child: fanActive && fanSpeed < 3
+                              ? GestureDetector(
+                            onTap: _increaseFanSpeed,
+                            child: const Padding(
+                              padding: EdgeInsets.all(4.0),
+                              child: Icon(
+                                Icons.chevron_right,
+                                color: Colors.white70,
+                                size: 20,
+                              ),
+                            ),
+                          )
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Defrost buttons on left aligned to bottom bar
+              Positioned(
+                bottom: 10, // same bottom as the center buttons/fan
+                left: 30,   // spacing from the left edge
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                     _CenterButton(
-                      icon: FontAwesomeIcons.fan,
-                      isSelected: fanActive,
-                      onTap: _toggleFan,
+                      icon: MdiIcons.carDefrostFront,
+                      isSelected: frontDefrost,
+                      onTap: _toggleFrontDefrost,
+                      activeColor: Colors.yellow,
+                    ),
+                    const SizedBox(width: 10),
+                    _CenterButton(
+                      icon: MdiIcons.carDefrostRear,
+                      isSelected: rearDefrost,
+                      onTap: _toggleRearDefrost,
                       activeColor: Colors.yellow,
                     ),
                   ],
@@ -220,11 +306,13 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 }
 
+// --- Fan slider thumb ---
 class _FanSliderThumb extends StatefulWidget {
   final double value;
   final Function(double) onChanged;
 
-  const _FanSliderThumb({super.key, required this.value, required this.onChanged});
+  const _FanSliderThumb(
+      {super.key, required this.value, required this.onChanged});
 
   @override
   State<_FanSliderThumb> createState() => _FanSliderThumbState();
@@ -240,18 +328,18 @@ class _FanSliderThumbState extends State<_FanSliderThumb>
     super.initState();
     _scaleController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 150), // quick press/release
+      duration: const Duration(milliseconds: 150),
     );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 1.3)
-        .animate(CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut));
+    _scaleAnim = Tween<double>(begin: 1.0, end: 1.3).animate(
+        CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut));
   }
 
   void _onPress() {
-    _scaleController.forward(from: 0); // scale up quickly
+    _scaleController.forward(from: 0);
   }
 
   void _onRelease() {
-    _scaleController.reverse(from: 1.0); // scale back quickly
+    _scaleController.reverse(from: 1.0);
   }
 
   @override
@@ -326,19 +414,24 @@ class _FanSliderThumbState extends State<_FanSliderThumb>
   }
 }
 
-// Center button widget
+// --- Center button widget with image support ---
 class _CenterButton extends StatefulWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? imagePath; // optional image
   final bool isSelected;
   final VoidCallback onTap;
   final Color activeColor;
+  final int fanSpeed;
 
   const _CenterButton({
-    required this.icon,
+    this.icon,
+    this.imagePath,
     required this.isSelected,
     required this.onTap,
     this.activeColor = Colors.blue,
-  });
+    this.fanSpeed = 1,
+  }) : assert(icon != null || imagePath != null,
+  'Either icon or imagePath must be provided');
 
   @override
   State<_CenterButton> createState() => _CenterButtonState();
@@ -352,6 +445,8 @@ class _CenterButtonState extends State<_CenterButton>
   late Animation<Color?> _iconColorAnim;
   late AnimationController _bounceController;
   late Animation<double> _bounceAnim;
+  late AnimationController _rotationController;
+  late Animation<double> _rotationAnim;
 
   bool _hovering = false;
   final double selectedWidth = 20;
@@ -362,8 +457,8 @@ class _CenterButtonState extends State<_CenterButton>
     super.initState();
     _hoverController =
         AnimationController(duration: const Duration(milliseconds: 180), vsync: this);
-    _hoverAnim = Tween<double>(begin: selectedWidth, end: hoverWidth)
-        .animate(CurvedAnimation(parent: _hoverController, curve: Curves.easeOutBack));
+    _hoverAnim = Tween<double>(begin: selectedWidth, end: hoverWidth).animate(
+        CurvedAnimation(parent: _hoverController, curve: Curves.easeOutBack));
 
     _colorController =
         AnimationController(duration: const Duration(milliseconds: 100), vsync: this);
@@ -373,25 +468,57 @@ class _CenterButtonState extends State<_CenterButton>
 
     _bounceController =
         AnimationController(duration: const Duration(milliseconds: 400), vsync: this);
-    _bounceAnim = Tween<double>(begin: selectedWidth, end: hoverWidth)
-        .animate(CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut));
+    _bounceAnim = Tween<double>(begin: selectedWidth, end: hoverWidth).animate(
+        CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut));
+
+    _rotationController = AnimationController(
+        duration: Duration(milliseconds: _getRotationDuration(widget.fanSpeed)),
+        vsync: this);
+    _rotationAnim = Tween<double>(begin: 0, end: 1).animate(_rotationController);
 
     if (widget.isSelected) {
       _colorController.value = 1.0;
       _bounceController.forward(from: 0);
+      if (widget.icon == FontAwesomeIcons.fan) _rotationController.repeat();
     }
   }
 
   @override
   void didUpdateWidget(_CenterButton oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    if (widget.fanSpeed != oldWidget.fanSpeed &&
+        widget.icon == FontAwesomeIcons.fan) {
+      _rotationController.duration =
+          Duration(milliseconds: _getRotationDuration(widget.fanSpeed));
+      if (widget.isSelected) _rotationController.repeat();
+    }
+
     if (widget.isSelected != oldWidget.isSelected) {
       if (widget.isSelected) {
         _colorController.forward();
         _bounceController.forward(from: 0);
+        if (widget.icon == FontAwesomeIcons.fan) _rotationController.repeat();
       } else {
         _colorController.reverse();
+        if (widget.icon == FontAwesomeIcons.fan) {
+          _rotationController.stop();
+          _rotationController.reset();
+        }
       }
+    }
+  }
+
+  int _getRotationDuration(int speed) {
+    switch (speed) {
+      case 1:
+        return 2000;
+      case 2:
+        return 1000;
+      case 3:
+        return 500;
+      default:
+        return 1500;
     }
   }
 
@@ -400,6 +527,7 @@ class _CenterButtonState extends State<_CenterButton>
     _hoverController.dispose();
     _colorController.dispose();
     _bounceController.dispose();
+    _rotationController.dispose();
     super.dispose();
   }
 
@@ -429,13 +557,32 @@ class _CenterButtonState extends State<_CenterButton>
             alignment: Alignment.center,
             children: [
               AnimatedBuilder(
-                animation: _iconColorAnim,
+                animation: Listenable.merge([_iconColorAnim, _rotationAnim]),
                 builder: (_, __) {
-                  return FaIcon(
-                    widget.icon,
-                    size: 22,
-                    color: _iconColorAnim.value,
-                  );
+                  Widget iconWidget;
+                  if (widget.imagePath != null) {
+                    iconWidget = Image.asset(
+                      widget.imagePath!,
+                      width: 22,
+                      height: 22,
+                      color: widget.isSelected ? widget.activeColor : _iconColorAnim.value,
+                    );
+                  } else {
+                    iconWidget = FaIcon(
+                      widget.icon!,
+                      size: 22,
+                      color: _iconColorAnim.value,
+                    );
+
+                    if (widget.icon == FontAwesomeIcons.fan &&
+                        widget.isSelected) {
+                      iconWidget = Transform.rotate(
+                        angle: _rotationAnim.value * 2 * 3.14159,
+                        child: iconWidget,
+                      );
+                    }
+                  }
+                  return iconWidget;
                 },
               ),
               if (!widget.isSelected)
@@ -459,9 +606,7 @@ class _CenterButtonState extends State<_CenterButton>
                     animation: Listenable.merge([_hoverController, _bounceController]),
                     builder: (_, __) {
                       double width = _hoverAnim.value;
-                      if (_bounceController.isAnimating) {
-                        width = _bounceAnim.value;
-                      }
+                      if (_bounceController.isAnimating) width = _bounceAnim.value;
                       return Container(
                         height: 2,
                         width: width,
