@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'dart:io' show Platform;
+import 'package:latlong2/latlong.dart';
 
 void main() async {
-  await setup();
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is initialized
+  try {
+    await dotenv.load(fileName: ".env"); // Load environment variables
+  } catch (e) {
+    throw Exception('Error loading .env file: $e'); // Print error if any
+  }
   runApp(const CarDashboardApp());
-}
-
-Future<void> setup() async {
-  await dotenv.load(
-    fileName: ".env",
-  );
-
-  MapboxOptions.setAccessToken(dotenv.env["ACCESS_TOKEN"]!);
 }
 
 class CarDashboardApp extends StatelessWidget {
@@ -127,18 +124,22 @@ class _DashboardScreenState extends State<DashboardScreen>
               Column(
                 children: [
                   Expanded(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF0F0F0F),
-                        border: Border(
-                            bottom: BorderSide(color: Color(0xFF252525))),
+                    child: FlutterMap(
+                      options: MapOptions(
+                        initialCenter: LatLng(
+                            51.509364, -0.128928), // Center the map over London
+                        initialZoom: 9.2,
                       ),
-                      child: const Center(
-                        child: Text(
-                          "Map Placeholder",
-                          style: TextStyle(color: Colors.white24, fontSize: 24),
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              "https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+                          additionalOptions: {
+                            'accessToken': dotenv.env["ACCESS_TOKEN"]!,
+                            'id': 'dark-v11',
+                          },
                         ),
-                      ),
+                      ],
                     ),
                   ),
                   // Center buttons row
@@ -181,7 +182,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 top: 15,
                 child: Container(
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1C1C1C),
                     borderRadius: BorderRadius.circular(30),
@@ -247,16 +248,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                           width: 28,
                           child: fanActive && fanSpeed > 1
                               ? GestureDetector(
-                            onTap: _decreaseFanSpeed,
-                            child: const Padding(
-                              padding: EdgeInsets.all(4.0),
-                              child: Icon(
-                                Icons.chevron_left,
-                                color: Colors.white70,
-                                size: 20,
-                              ),
-                            ),
-                          )
+                                  onTap: _decreaseFanSpeed,
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: Icon(
+                                      Icons.chevron_left,
+                                      color: Colors.white70,
+                                      size: 20,
+                                    ),
+                                  ),
+                                )
                               : null,
                         ),
                         _CenterButton(
@@ -270,16 +271,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                           width: 28,
                           child: fanActive && fanSpeed < 3
                               ? GestureDetector(
-                            onTap: _increaseFanSpeed,
-                            child: const Padding(
-                              padding: EdgeInsets.all(4.0),
-                              child: Icon(
-                                Icons.chevron_right,
-                                color: Colors.white70,
-                                size: 20,
-                              ),
-                            ),
-                          )
+                                  onTap: _increaseFanSpeed,
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: Icon(
+                                      Icons.chevron_right,
+                                      color: Colors.white70,
+                                      size: 20,
+                                    ),
+                                  ),
+                                )
                               : null,
                         ),
                       ],
@@ -290,7 +291,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               // Defrost buttons on left aligned to bottom bar
               Positioned(
                 bottom: 10, // same bottom as the center buttons/fan
-                left: 30,   // spacing from the left edge
+                left: 30, // spacing from the left edge
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -395,7 +396,7 @@ class _FanSliderThumbState extends State<_FanSliderThumb>
                 builder: (context, child) {
                   double pos = (trackHeight - 20) * widget.value;
                   Color color =
-                  Color.lerp(Colors.blue, Colors.red, widget.value)!;
+                      Color.lerp(Colors.blue, Colors.red, widget.value)!;
                   return Transform.translate(
                     offset: Offset(0, -pos),
                     child: Transform.scale(
@@ -443,7 +444,7 @@ class _CenterButton extends StatefulWidget {
     this.activeColor = Colors.blue,
     this.fanSpeed = 1,
   }) : assert(icon != null || imagePath != null,
-  'Either icon or imagePath must be provided');
+            'Either icon or imagePath must be provided');
 
   @override
   State<_CenterButton> createState() => _CenterButtonState();
@@ -467,26 +468,27 @@ class _CenterButtonState extends State<_CenterButton>
   @override
   void initState() {
     super.initState();
-    _hoverController =
-        AnimationController(duration: const Duration(milliseconds: 180), vsync: this);
+    _hoverController = AnimationController(
+        duration: const Duration(milliseconds: 180), vsync: this);
     _hoverAnim = Tween<double>(begin: selectedWidth, end: hoverWidth).animate(
         CurvedAnimation(parent: _hoverController, curve: Curves.easeOutBack));
 
-    _colorController =
-        AnimationController(duration: const Duration(milliseconds: 100), vsync: this);
+    _colorController = AnimationController(
+        duration: const Duration(milliseconds: 100), vsync: this);
     _iconColorAnim =
         ColorTween(begin: const Color(0xFF555555), end: Colors.white70)
             .animate(_colorController);
 
-    _bounceController =
-        AnimationController(duration: const Duration(milliseconds: 400), vsync: this);
+    _bounceController = AnimationController(
+        duration: const Duration(milliseconds: 400), vsync: this);
     _bounceAnim = Tween<double>(begin: selectedWidth, end: hoverWidth).animate(
         CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut));
 
     _rotationController = AnimationController(
         duration: Duration(milliseconds: _getRotationDuration(widget.fanSpeed)),
         vsync: this);
-    _rotationAnim = Tween<double>(begin: 0, end: 1).animate(_rotationController);
+    _rotationAnim =
+        Tween<double>(begin: 0, end: 1).animate(_rotationController);
 
     if (widget.isSelected) {
       _colorController.value = 1.0;
@@ -577,7 +579,9 @@ class _CenterButtonState extends State<_CenterButton>
                       widget.imagePath!,
                       width: 22,
                       height: 22,
-                      color: widget.isSelected ? widget.activeColor : _iconColorAnim.value,
+                      color: widget.isSelected
+                          ? widget.activeColor
+                          : _iconColorAnim.value,
                     );
                   } else {
                     iconWidget = FaIcon(
@@ -615,10 +619,12 @@ class _CenterButtonState extends State<_CenterButton>
                 Positioned(
                   bottom: 2,
                   child: AnimatedBuilder(
-                    animation: Listenable.merge([_hoverController, _bounceController]),
+                    animation:
+                        Listenable.merge([_hoverController, _bounceController]),
                     builder: (_, __) {
                       double width = _hoverAnim.value;
-                      if (_bounceController.isAnimating) width = _bounceAnim.value;
+                      if (_bounceController.isAnimating)
+                        width = _bounceAnim.value;
                       return Container(
                         height: 2,
                         width: width,
