@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 void main() async {
@@ -48,6 +49,10 @@ class _DashboardScreenState extends State<DashboardScreen>
   bool frontDefrost = false;
   bool rearDefrost = false;
 
+  // Location Tracking
+  LatLng? currentLocation;
+  final MapController _mapController = MapController();
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +60,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     Stream.periodic(const Duration(seconds: 1)).listen((_) {
       if (mounted) _updateTime();
     });
+    _getCurrentLocation();
   }
 
   void _updateTime() {
@@ -99,6 +105,30 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Color.lerp(Colors.blue, Colors.red, value)!;
   }
 
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+    if (permission == LocationPermission.deniedForever) return;
+
+    final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+
+    setState(() {
+      currentLocation = LatLng(pos.latitude, pos.longitude);
+    });
+
+    _mapController.move(currentLocation!, 15); // Center map
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -125,9 +155,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                 children: [
                   Expanded(
                     child: FlutterMap(
+                      mapController: _mapController,
                       options: MapOptions(
-                        initialCenter: LatLng(
-                            51.509364, -0.128928), // Center the map over London
+                        initialCenter: LatLng(51.509364, -0.128928), // Default London
                         initialZoom: 9.2,
                       ),
                       children: [
@@ -139,6 +169,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                             'id': 'dark-v11',
                           },
                         ),
+                        if (currentLocation != null)
+                          CircleLayer(
+                            circles: [
+                              CircleMarker(
+                                point: currentLocation!,
+                                radius: 8,
+                                color: Colors.blue.withOpacity(0.9),
+                                borderStrokeWidth: 2,
+                                borderColor: Colors.white,
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
