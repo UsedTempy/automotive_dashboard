@@ -52,6 +52,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   // Location Tracking
   LatLng? currentLocation;
   final MapController _mapController = MapController();
+  bool _isMapCentered = true;
 
   @override
   void initState() {
@@ -129,6 +130,38 @@ class _DashboardScreenState extends State<DashboardScreen>
     _mapController.move(currentLocation!, 15); // Center map
   }
 
+  // Re-center map to current location
+  void _recenterMap() {
+    if (currentLocation != null) {
+      _mapController.move(currentLocation!, _mapController.camera.zoom);
+      setState(() {
+        _isMapCentered = true;
+      });
+    }
+  }
+
+  // Check if map is centered on current location
+  void _checkIfMapCentered() {
+    if (currentLocation == null) return;
+
+    final center = _mapController.camera.center;
+    final distance = Geolocator.distanceBetween(
+      currentLocation!.latitude,
+      currentLocation!.longitude,
+      center.latitude,
+      center.longitude,
+    );
+
+    // Consider centered if within 10 meters (more sensitive)
+    final isCentered = distance < 10;
+
+    if (isCentered != _isMapCentered) {
+      setState(() {
+        _isMapCentered = isCentered;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -154,32 +187,48 @@ class _DashboardScreenState extends State<DashboardScreen>
               Column(
                 children: [
                   Expanded(
-                    child: FlutterMap(
-                      mapController: _mapController,
-                      options: MapOptions(
-                        initialCenter: LatLng(51.509364, -0.128928), // Default London
-                        initialZoom: 9.2,
-                      ),
+                    child: Stack(
                       children: [
-                        TileLayer(
-                          urlTemplate:
+                        FlutterMap(
+                          mapController: _mapController,
+                          options: MapOptions(
+                            initialCenter: LatLng(51.509364, -0.128928), // Default London
+                            initialZoom: 6,
+                            onPositionChanged: (position, hasGesture) {
+                              if (hasGesture && currentLocation != null) {
+                                _checkIfMapCentered();
+                              }
+                            },
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate:
                               "https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
-                          additionalOptions: {
-                            'accessToken': dotenv.env["ACCESS_TOKEN"]!,
-                            'id': 'dark-v11',
-                          },
-                        ),
-                        if (currentLocation != null)
-                          CircleLayer(
-                            circles: [
-                              CircleMarker(
-                                point: currentLocation!,
-                                radius: 5,
-                                color: Colors.blue.withOpacity(0.9),
-                                borderStrokeWidth: 2.5,
-                                borderColor: Colors.white.withOpacity(0.7),
+                              additionalOptions: {
+                                'accessToken': dotenv.env["ACCESS_TOKEN"]!,
+                                'id': 'dark-v11',
+                              },
+                            ),
+                            if (currentLocation != null)
+                              CircleLayer(
+                                circles: [
+                                  CircleMarker(
+                                    point: currentLocation!,
+                                    radius: 5,
+                                    color: Colors.blue.withOpacity(0.9),
+                                    borderStrokeWidth: 2.5,
+                                    borderColor: Colors.white.withOpacity(0.7),
+                                  ),
+                                ],
                               ),
-                            ],
+                          ],
+                        ),
+                        // Re-center button positioned in bottom left of map
+                        if (currentLocation != null && !_isMapCentered)
+                          Positioned(
+                            bottom: 20,
+                            left: 20,
+                            child: _RecenterButton(onTap: _recenterMap),
                           ),
                       ],
                     ),
@@ -224,7 +273,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 top: 15,
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1C1C1C),
                     borderRadius: BorderRadius.circular(30),
@@ -290,16 +339,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                           width: 28,
                           child: fanActive && fanSpeed > 1
                               ? GestureDetector(
-                                  onTap: _decreaseFanSpeed,
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(4.0),
-                                    child: Icon(
-                                      Icons.chevron_left,
-                                      color: Colors.white70,
-                                      size: 20,
-                                    ),
-                                  ),
-                                )
+                            onTap: _decreaseFanSpeed,
+                            child: const Padding(
+                              padding: EdgeInsets.all(4.0),
+                              child: Icon(
+                                Icons.chevron_left,
+                                color: Colors.white70,
+                                size: 20,
+                              ),
+                            ),
+                          )
                               : null,
                         ),
                         _CenterButton(
@@ -313,16 +362,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                           width: 28,
                           child: fanActive && fanSpeed < 3
                               ? GestureDetector(
-                                  onTap: _increaseFanSpeed,
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(4.0),
-                                    child: Icon(
-                                      Icons.chevron_right,
-                                      color: Colors.white70,
-                                      size: 20,
-                                    ),
-                                  ),
-                                )
+                            onTap: _increaseFanSpeed,
+                            child: const Padding(
+                              padding: EdgeInsets.all(4.0),
+                              child: Icon(
+                                Icons.chevron_right,
+                                color: Colors.white70,
+                                size: 20,
+                              ),
+                            ),
+                          )
                               : null,
                         ),
                       ],
@@ -356,6 +405,99 @@ class _DashboardScreenState extends State<DashboardScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// --- Re-center button widget ---
+class _RecenterButton extends StatefulWidget {
+  final VoidCallback onTap;
+
+  const _RecenterButton({required this.onTap});
+
+  @override
+  State<_RecenterButton> createState() => _RecenterButtonState();
+}
+
+class _RecenterButtonState extends State<_RecenterButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _scaleController;
+  late Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown() {
+    _scaleController.forward();
+  }
+
+  void _onTapUp() {
+    _scaleController.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _onTapDown(),
+      onTapUp: (_) => _onTapUp(),
+      onTapCancel: () => _onTapUp(),
+      onTap: widget.onTap,
+      child: AnimatedBuilder(
+        animation: _scaleAnim,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnim.value,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1C1C1C).withOpacity(0.9),
+                borderRadius: BorderRadius.circular(25), // Fully rounded
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ],
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.my_location,
+                    color: Colors.blue,
+                    size: 16,
+                  ),
+                  SizedBox(width: 6),
+                  Text(
+                    'Re-center',
+                    style: TextStyle(
+                      color: Color(0xFFE0E0E0),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -438,7 +580,7 @@ class _FanSliderThumbState extends State<_FanSliderThumb>
                 builder: (context, child) {
                   double pos = (trackHeight - 20) * widget.value;
                   Color color =
-                      Color.lerp(Colors.blue, Colors.red, widget.value)!;
+                  Color.lerp(Colors.blue, Colors.red, widget.value)!;
                   return Transform.translate(
                     offset: Offset(0, -pos),
                     child: Transform.scale(
@@ -486,7 +628,7 @@ class _CenterButton extends StatefulWidget {
     this.activeColor = Colors.blue,
     this.fanSpeed = 1,
   }) : assert(icon != null || imagePath != null,
-            'Either icon or imagePath must be provided');
+  'Either icon or imagePath must be provided');
 
   @override
   State<_CenterButton> createState() => _CenterButtonState();
@@ -662,7 +804,7 @@ class _CenterButtonState extends State<_CenterButton>
                   bottom: 2,
                   child: AnimatedBuilder(
                     animation:
-                        Listenable.merge([_hoverController, _bounceController]),
+                    Listenable.merge([_hoverController, _bounceController]),
                     builder: (_, __) {
                       double width = _hoverAnim.value;
                       if (_bounceController.isAnimating)
