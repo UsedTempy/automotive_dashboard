@@ -193,7 +193,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           mapController: _mapController,
                           options: MapOptions(
                             initialCenter: LatLng(51.509364, -0.128928), // Default London
-                            initialZoom: 6,
+                            initialZoom: 1,
                             onPositionChanged: (position, hasGesture) {
                               if (hasGesture && currentLocation != null) {
                                 _checkIfMapCentered();
