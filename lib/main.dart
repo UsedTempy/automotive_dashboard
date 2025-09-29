@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 
 import 'widgets/center_button.dart';
 import 'widgets/fan_slider_thumb.dart';
@@ -193,47 +194,51 @@ class _DashboardScreenState extends State<DashboardScreen>
                   Expanded(
                     child: Stack(
                       children: [
-                        FlutterMap(
-                          mapController: _mapController,
-                          options: MapOptions(
-                            initialCenter: LatLng(51.509364, -0.128928), // Default London
-                            initialZoom: 1,
-                            onPositionChanged: (position, hasGesture) {
-                              if (hasGesture && currentLocation != null) {
-                                _checkIfMapCentered();
-                              }
-                            },
-                          ),
-                          children: [
-                            TileLayer(
-                              urlTemplate:
-                              "https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
-                              additionalOptions: {
-                                'accessToken': dotenv.env["ACCESS_TOKEN"]!,
-                                'id': 'dark-v11',
-                              },
-                            ),
-                            if (currentLocation != null)
-                              CircleLayer(
-                                circles: [
-                                  CircleMarker(
-                                    point: currentLocation!,
-                                    radius: 5,
-                                    color: Colors.blue.withOpacity(0.9),
-                                    borderStrokeWidth: 2.5,
-                                    borderColor: Colors.white.withOpacity(0.7),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        ),
+                        HtmlWidget('''
+                        
+                        ''')
+                        // Widget html = HtmlWidget(html)
+                        // FlutterMap(
+                        //   mapController: _mapController,
+                        //   options: MapOptions(
+                        //     initialCenter: LatLng(51.509364, -0.128928), // Default London
+                        //     initialZoom: 1,
+                        //     onPositionChanged: (position, hasGesture) {
+                        //       if (hasGesture && currentLocation != null) {
+                        //         _checkIfMapCentered();
+                        //       }
+                        //     },
+                        //   ),
+                        //   children: [
+                        //     TileLayer(
+                        //       urlTemplate:
+                        //       "https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+                        //       additionalOptions: {
+                        //         'accessToken': dotenv.env["ACCESS_TOKEN"]!,
+                        //         'id': 'dark-v11',
+                        //       },
+                        //     ),
+                        //     if (currentLocation != null)
+                        //       CircleLayer(
+                        //         circles: [
+                        //           CircleMarker(
+                        //             point: currentLocation!,
+                        //             radius: 5,
+                        //             color: Colors.blue.withOpacity(0.9),
+                        //             borderStrokeWidth: 2.5,
+                        //             borderColor: Colors.white.withOpacity(0.7),
+                        //           ),
+                        //         ],
+                        //       ),
+                        //   ],
+                        // ),
                         // Re-center button positioned in bottom left of map
-                        if (currentLocation != null && !_isMapCentered)
-                          Positioned(
-                            bottom: 20,
-                            left: 20,
-                            child: RecenterButton(onTap: _recenterMap),
-                          ),
+                        // if (currentLocation != null && !_isMapCentered)
+                        //   Positioned(
+                        //     bottom: 20,
+                        //     left: 20,
+                        //     child: RecenterButton(onTap: _recenterMap),
+                        //   ),
                       ],
                     ),
                   ),
