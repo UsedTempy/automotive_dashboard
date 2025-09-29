@@ -41,22 +41,24 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
       body: Center(
-          child: Container(
-              width: 1000,
-              height: 450,
-              decoration: BoxDecoration(
-                color: const Color(0xFF111111),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF252525)),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
-                      blurRadius: 30,
-                      offset: const Offset(0, 10))
-                ],
-              ),
-              clipBehavior: Clip.hardEdge,
-              child: MainLayout())),
+        child: Container(
+          width: 1000,
+          height: 450,
+          decoration: BoxDecoration(
+            color: const Color(0xFF111111),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFF252525)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 30,
+                offset: const Offset(0, 10))
+              ],
+          ),
+          clipBehavior: Clip.hardEdge,
+          child: MainLayout()
+        )
+      ),
     );
   }
 }
