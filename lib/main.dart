@@ -6,9 +6,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../widgets/center_button.dart';
-import '../widgets/fan_slider_thumb.dart';
-import '../widgets/re_center_button.dart';
+import 'widgets/center_button.dart';
+import 'widgets/fan_slider_thumb.dart';
+import 'widgets/re_center_button.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is initialized
@@ -232,7 +232,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           Positioned(
                             bottom: 20,
                             left: 20,
-                            child: _RecenterButton(onTap: _recenterMap),
+                            child: RecenterButton(onTap: _recenterMap),
                           ),
                       ],
                     ),
@@ -250,19 +250,19 @@ class _DashboardScreenState extends State<DashboardScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _CenterButton(
+                        CenterButton(
                           icon: FontAwesomeIcons.locationDot,
                           isSelected: selectedCenterButton == "gps",
                           onTap: () => _selectCenterButton("gps"),
                         ),
                         const SizedBox(width: 12),
-                        _CenterButton(
+                        CenterButton(
                           icon: FontAwesomeIcons.music,
                           isSelected: selectedCenterButton == "music",
                           onTap: () => _selectCenterButton("music"),
                         ),
                         const SizedBox(width: 12),
-                        _CenterButton(
+                        CenterButton(
                           icon: FontAwesomeIcons.camera,
                           isSelected: selectedCenterButton == "camera",
                           onTap: () => _selectCenterButton("camera"),
@@ -327,7 +327,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   ),
                                 ),
                               ),
-                              _FanSliderThumb(
+                              FanSliderThumb(
                                 value: fanSliderValue,
                                 onChanged: (v) =>
                                     setState(() => fanSliderValue = v),
@@ -355,7 +355,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           )
                               : null,
                         ),
-                        _CenterButton(
+                        CenterButton(
                           icon: FontAwesomeIcons.fan,
                           isSelected: fanActive,
                           onTap: _toggleFan,
@@ -390,14 +390,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _CenterButton(
+                    CenterButton(
                       icon: MdiIcons.carDefrostFront,
                       isSelected: frontDefrost,
                       onTap: _toggleFrontDefrost,
                       activeColor: Colors.yellow,
                     ),
                     const SizedBox(width: 10),
-                    _CenterButton(
+                    CenterButton(
                       icon: MdiIcons.carDefrostRear,
                       isSelected: rearDefrost,
                       onTap: _toggleRearDefrost,

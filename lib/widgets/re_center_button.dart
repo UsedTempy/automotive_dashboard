@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-class _RecenterButton extends StatefulWidget {
+class RecenterButton extends StatefulWidget {
   final VoidCallback onTap;
 
-  const _RecenterButton({required this.onTap});
+  const RecenterButton({required this.onTap});
 
   @override
-  State<_RecenterButton> createState() => _RecenterButtonState();
+  State<RecenterButton> createState() => RecenterButtonState();
 }
 
-class _RecenterButtonState extends State<_RecenterButton>
+class RecenterButtonState extends State<RecenterButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _scaleController;
   late Animation<double> _scaleAnim;

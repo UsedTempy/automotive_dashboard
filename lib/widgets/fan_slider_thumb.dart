@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-class _FanSliderThumb extends StatefulWidget {
+class FanSliderThumb extends StatefulWidget {
   final double value;
   final Function(double) onChanged;
 
-  const _FanSliderThumb(
+  const FanSliderThumb(
       {super.key, required this.value, required this.onChanged});
 
   @override
-  State<_FanSliderThumb> createState() => _FanSliderThumbState();
+  State<FanSliderThumb> createState() => FanSliderThumbState();
 }
 
-class _FanSliderThumbState extends State<_FanSliderThumb>
+class FanSliderThumbState extends State<FanSliderThumb>
     with SingleTickerProviderStateMixin {
   late AnimationController _scaleController;
   late Animation<double> _scaleAnim;

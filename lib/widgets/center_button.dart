@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class _CenterButton extends StatefulWidget {
+class CenterButton extends StatefulWidget {
   final IconData? icon;
   final String? imagePath; // optional image
   final bool isSelected;
@@ -9,7 +9,7 @@ class _CenterButton extends StatefulWidget {
   final Color activeColor;
   final int fanSpeed;
 
-  const _CenterButton({
+  const CenterButton({
     this.icon,
     this.imagePath,
     required this.isSelected,
@@ -20,10 +20,10 @@ class _CenterButton extends StatefulWidget {
   'Either icon or imagePath must be provided');
 
   @override
-  State<_CenterButton> createState() => _CenterButtonState();
+  State<CenterButton> createState() => _CenterButtonState();
 }
 
-class _CenterButtonState extends State<_CenterButton>
+class _CenterButtonState extends State<CenterButton>
     with TickerProviderStateMixin {
   late AnimationController _hoverController;
   late Animation<double> _hoverAnim;
@@ -71,7 +71,7 @@ class _CenterButtonState extends State<_CenterButton>
   }
 
   @override
-  void didUpdateWidget(_CenterButton oldWidget) {
+  void didUpdateWidget(CenterButton oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.fanSpeed != oldWidget.fanSpeed &&
