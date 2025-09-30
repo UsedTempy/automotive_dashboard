@@ -1,3 +1,4 @@
+import 'package:car_dashboard/auth/spotify_service.dart';
 import 'package:flutter/material.dart';
 
 import 'package:car_dashboard/screens/navigation.dart';
@@ -12,7 +13,6 @@ class MainLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Stack(alignment: Alignment.bottomCenter, children: [
       NavigationScreen(),
-
       BottomBarLayout(),
       BottomLeftBarLayout(),
       IslandLayout(),
