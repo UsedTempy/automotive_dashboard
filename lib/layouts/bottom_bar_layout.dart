@@ -37,7 +37,7 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
       decoration: const BoxDecoration(
         color: Color(0xFF111111),
-        border: Border(top: BorderSide(color: Color(0xFF252525))),
+        border: Border(top: BorderSide(color: Color(0xFF252525)), bottom: BorderSide(color: Color(0xFF252525))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
