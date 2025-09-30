@@ -1,3 +1,4 @@
+import 'package:car_dashboard/layouts/music_player_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -56,7 +57,17 @@ class _DashboardScreenState extends State<DashboardScreen>
               ],
           ),
           clipBehavior: Clip.hardEdge,
-          child: MainLayout()
+          child: Row(
+            children: [
+              Flexible(
+                child: MusicPlayerLayout()
+              ),
+              Flexible(
+                flex: 3,
+                child: MainLayout(),
+              ),
+            ],
+          )
         )
       ),
     );
