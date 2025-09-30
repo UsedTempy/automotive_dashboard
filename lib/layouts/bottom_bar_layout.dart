@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:car_dashboard/widgets/center_button.dart';
+import 'package:car_dashboard/widgets/bottombar/center_button.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class BottomBarLayout extends StatefulWidget {

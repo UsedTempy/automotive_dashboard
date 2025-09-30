@@ -4,7 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:car_dashboard/widgets/re_center_button.dart';
+import 'package:car_dashboard/widgets/navigation/re_center_button.dart';
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({super.key});

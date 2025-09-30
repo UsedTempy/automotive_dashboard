@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:car_dashboard/widgets/album_art_widget.dart';
-import 'package:car_dashboard/widgets/playback_controls_widget.dart';
-import 'package:car_dashboard/widgets/song_info_widget.dart';
-import 'package:car_dashboard/widgets/song_progress_bar_widget.dart';
+import 'package:car_dashboard/widgets/music/album_art_widget.dart';
+import 'package:car_dashboard/widgets/music/playback_controls_widget.dart';
+import 'package:car_dashboard/widgets/music/song_info_widget.dart';
+import 'package:car_dashboard/widgets/music/song_progress_bar_widget.dart';
 
 class MusicPlayerLayout extends StatefulWidget {
   const MusicPlayerLayout({super.key});
