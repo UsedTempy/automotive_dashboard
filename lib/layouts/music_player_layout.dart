@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
+
 import 'package:car_dashboard/widgets/album_art_widget.dart';
 import 'package:car_dashboard/widgets/playback_controls_widget.dart';
 import 'package:car_dashboard/widgets/song_info_widget.dart';
 import 'package:car_dashboard/widgets/song_progress_bar_widget.dart';
-import 'package:flutter/material.dart';
 
 class MusicPlayerLayout extends StatefulWidget {
   const MusicPlayerLayout({super.key});
@@ -23,7 +24,7 @@ class _MusicPlayerLayoutState extends State<MusicPlayerLayout> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Spacer(flex: 1),        
-                // Album Art - Large and centered
+                // Album Art
                 AlbumArtWidget(),        
                 const Spacer(flex: 2),
                 // Song Info
