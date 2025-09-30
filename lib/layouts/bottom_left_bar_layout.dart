@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-import 'package:car_dashboard/widgets/center_button.dart';
+import 'package:car_dashboard/widgets/bottombar/center_button.dart';
 
 class BottomLeftBarLayout extends StatefulWidget {
   const BottomLeftBarLayout({super.key});

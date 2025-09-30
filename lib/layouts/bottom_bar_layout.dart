@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:car_dashboard/widgets/center_button.dart';
+import 'package:car_dashboard/widgets/bottombar/center_button.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class BottomBarLayout extends StatefulWidget {
-  const BottomBarLayout({super.key});
+  final Function(bool) onMusicButtonToggle;
+  final bool isMusicPlayerVisible;
+
+  const BottomBarLayout({
+    super.key,
+    required this.onMusicButtonToggle,
+    required this.isMusicPlayerVisible,
+  });
 
   @override
   State<BottomBarLayout> createState() => _BottomBarLayoutState();
@@ -14,6 +21,13 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
 
   void _selectCenterButton(String button) {
     setState(() => selectedCenterButton = button);
+    
+    // Toggle music player visibility when music button is selected/deselected
+    if (button == "music") {
+      widget.onMusicButtonToggle(true);
+    } else if (widget.isMusicPlayerVisible) {
+      widget.onMusicButtonToggle(false);
+    }
   }
 
   @override
@@ -23,7 +37,7 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
       decoration: const BoxDecoration(
         color: Color(0xFF111111),
-        border: Border(top: BorderSide(color: Color(0xFF252525))),
+        border: Border(top: BorderSide(color: Color(0xFF252525)), bottom: BorderSide(color: Color(0xFF252525))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
