@@ -49,7 +49,7 @@ class NavigationScreenState extends State<NavigationScreen> {
   // Re-center map to current location
   void _recenterMap() {
     if (currentLocation != null) {
-      _mapController.move(currentLocation!, 19);
+      _mapController.move(currentLocation!, 18);
       setState(() {
         _isMapCentered = true;
       });
@@ -77,7 +77,7 @@ class NavigationScreenState extends State<NavigationScreen> {
       currentLocation = LatLng(pos.latitude, pos.longitude);
     });
 
-    _mapController.move(currentLocation!, 19); // Center map
+    _mapController.move(currentLocation!, 18); // Center map
   }
 
   @override
@@ -87,7 +87,7 @@ class NavigationScreenState extends State<NavigationScreen> {
         mapController: _mapController,
         options: MapOptions(
           initialCenter: LatLng(51.509364, -0.128928), // Default London
-          initialZoom: 19,
+          initialZoom: 18,
           onPositionChanged: (position, hasGesture) {
             if (hasGesture && currentLocation != null) {
               _checkIfMapCentered();
