@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   geolocator_windows
   url_launcher_windows
+  webview_windows
   window_to_front
 )
 

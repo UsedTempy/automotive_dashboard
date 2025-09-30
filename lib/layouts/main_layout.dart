@@ -16,6 +16,7 @@ class MainLayout extends StatelessWidget {
       BottomBarLayout(),
       BottomLeftBarLayout(),
       IslandLayout(),
+      SpotifyService()
     ]);
   }
 }
