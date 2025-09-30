@@ -22,7 +22,7 @@ class NavigationScreenState extends State<NavigationScreen> {
   void initState() {
     super.initState();
 
-    _getCurrentLocation();
+    //_getCurrentLocation();
   }
 
   void _checkIfMapCentered() {

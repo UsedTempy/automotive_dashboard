@@ -11,12 +11,15 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Stack(alignment: Alignment.bottomCenter, children: [
-      NavigationScreen(),
-      BottomBarLayout(),
-      BottomLeftBarLayout(),
-      IslandLayout(),
-      SpotifyService()
+    return Stack(alignment: Alignment.bottomCenter, children: [
+      const NavigationScreen(),
+      const BottomBarLayout(),
+      const BottomLeftBarLayout(),
+      const IslandLayout(),
+      Center(
+          child: SpotifyAuthWidget(
+              serverUrl:
+                  'https://matilde-unconquerable-vincibly.ngrok-free.dev'))
     ]);
   }
 }
