@@ -6,16 +6,28 @@ import 'package:car_dashboard/layouts/bottom_bar_layout.dart';
 import 'package:car_dashboard/layouts/island_layout.dart';
 
 class MainLayout extends StatelessWidget {
-  const MainLayout({super.key});
+  final Function(bool) onMusicButtonToggle;
+  final bool isMusicPlayerVisible;
+
+  const MainLayout({
+    super.key,
+    required this.onMusicButtonToggle,
+    required this.isMusicPlayerVisible,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return const Stack(alignment: Alignment.bottomCenter, children: [
-      NavigationScreen(),
-
-      BottomBarLayout(),
-      BottomLeftBarLayout(),
-      IslandLayout(),
-    ]);
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        const NavigationScreen(),
+        BottomBarLayout(
+          onMusicButtonToggle: onMusicButtonToggle,
+          isMusicPlayerVisible: isMusicPlayerVisible,
+        ),
+        const BottomLeftBarLayout(),
+        const IslandLayout(),
+      ],
+    );
   }
 }

@@ -3,7 +3,14 @@ import 'package:car_dashboard/widgets/center_button.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class BottomBarLayout extends StatefulWidget {
-  const BottomBarLayout({super.key});
+  final Function(bool) onMusicButtonToggle;
+  final bool isMusicPlayerVisible;
+
+  const BottomBarLayout({
+    super.key,
+    required this.onMusicButtonToggle,
+    required this.isMusicPlayerVisible,
+  });
 
   @override
   State<BottomBarLayout> createState() => _BottomBarLayoutState();
@@ -14,6 +21,13 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
 
   void _selectCenterButton(String button) {
     setState(() => selectedCenterButton = button);
+    
+    // Toggle music player visibility when music button is selected/deselected
+    if (button == "music") {
+      widget.onMusicButtonToggle(true);
+    } else if (widget.isMusicPlayerVisible) {
+      widget.onMusicButtonToggle(false);
+    }
   }
 
   @override

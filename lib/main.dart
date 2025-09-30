@@ -5,11 +5,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'layouts/main_layout.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is initialized
+  WidgetsFlutterBinding.ensureInitialized();
   try {
-    await dotenv.load(fileName: ".env"); // Load environment variables
+    await dotenv.load(fileName: ".env");
   } catch (e) {
-    throw Exception('Error loading .env file: $e'); // Print error if any
+    throw Exception('Error loading .env file: $e');
   }
   runApp(const CarDashboardApp());
 }
@@ -37,6 +37,14 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen>
     with SingleTickerProviderStateMixin {
+  bool _isMusicPlayerVisible = false;
+
+  void _toggleMusicPlayer(bool isVisible) {
+    setState(() {
+      _isMusicPlayerVisible = isVisible;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,22 +61,30 @@ class _DashboardScreenState extends State<DashboardScreen>
               BoxShadow(
                 color: Colors.black.withOpacity(0.5),
                 blurRadius: 30,
-                offset: const Offset(0, 10))
-              ],
+                offset: const Offset(0, 10),
+              )
+            ],
           ),
           clipBehavior: Clip.hardEdge,
           child: Row(
             children: [
-              Flexible(
-                child: MusicPlayerLayout()
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOutCubic,
+                width: _isMusicPlayerVisible ? 250 : 0,
+                child: _isMusicPlayerVisible
+                    ? const MusicPlayerLayout()
+                    : const SizedBox.shrink(),
               ),
-              Flexible(
-                flex: 3,
-                child: MainLayout(),
+              Expanded(
+                child: MainLayout(
+                  onMusicButtonToggle: _toggleMusicPlayer,
+                  isMusicPlayerVisible: _isMusicPlayerVisible,
+                ),
               ),
             ],
-          )
-        )
+          ),
+        ),
       ),
     );
   }
