@@ -19,7 +19,7 @@ class SpotifyService {
   static Map<String, String>? _lastSong;
 
   /// Start polling the currently playing song every [interval] ms
-  static void startSongListener({int interval = 300}) {
+  static void startSongListener({int interval = 800}) {
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(Duration(milliseconds: interval), (_) async {
       final song = await getCurrentlyPlaying();

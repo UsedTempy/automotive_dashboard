@@ -1,3 +1,4 @@
+import 'package:car_dashboard/services/navigation_service.dart';
 import 'package:car_dashboard/templates/searchResults.dart';
 import 'package:car_dashboard/widgets/navigation/search_item_widget.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,9 @@ class _NavigationState extends State<Navigation> {
   List<SearchResult> _searchResults = [];
   Timer? _debounce;
   late String _sessionToken;
-  String _proximity = '6.609763,52.69607'; // Default to Stadskanaal
+  // String _proximity = '6.609763,52.69607'; // Default to Stadskanaal
+  double longPos = 6.609763;
+  double latPos = 52.69607;
 
   @override
   void initState() {
@@ -60,9 +63,8 @@ class _NavigationState extends State<Navigation> {
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      _proximity = '${position.longitude},${position.latitude}';
-
-      print('Using current location: $_proximity');
+      longPos = position.longitude;
+      latPos = position.latitude;
     } catch (e) {
       print('Error getting location: $e');
     }
@@ -115,7 +117,7 @@ class _NavigationState extends State<Navigation> {
           '&language=en'
           '&limit=6'
           '&types=country,region,district,postcode,locality,place,neighborhood,address,poi,street,category'
-          '&proximity=$_proximity');
+          '&proximity=${longPos},${latPos}');
 
       final response = await http.get(url);
 
@@ -136,12 +138,12 @@ class _NavigationState extends State<Navigation> {
           }
 
           return SearchResult(
-            name: suggestion['name'] ?? '',
-            location: suggestion['place_formatted'] ??
-                suggestion['full_address'] ??
-                '',
-            distance: distanceStr,
-          );
+              name: suggestion['name'] ?? '',
+              location: suggestion['place_formatted'] ??
+                  suggestion['full_address'] ??
+                  '',
+              distance: distanceStr,
+              id: suggestion['mapbox_id']);
         }).toList();
 
         if (_searchController.text.isNotEmpty) {
@@ -295,16 +297,24 @@ class _NavigationState extends State<Navigation> {
                           mainAxisSize: MainAxisSize.min,
                           children: _searchResults.map((result) {
                             return SearchItemWidget(
-                              result: result,
-                              onTap: () {
-                                print('Selected: ${result.name}');
-                                print('Location: ${result.location}');
-                                print('Distance: ${result.distance}');
-                                _searchController.clear();
-                                _focusNode.unfocus();
-                                _sessionToken = const Uuid().v4();
-                              },
-                            );
+                                result: result,
+                                onTap: () async {
+                                  final session_Token = const Uuid().v4();
+                                  print('Selected: ${result.id}');
+
+                                  // Retrieve coordinates
+                                  final locationData =
+                                      await NavigationService.retrieveLocation(
+                                          result.id, session_Token);
+
+                                  if (locationData != null) {
+                                    NavigationService.getDirections(startLatitude: latPos, startLongitude: longPos, endLongitude: locationData['longitude'], endLatitude: locationData['latitude']);
+                                  }
+
+                                  _searchController.clear();
+                                  _focusNode.unfocus();
+                                  _sessionToken = session_Token;
+                                });
                           }).toList(),
                         ),
                 ),

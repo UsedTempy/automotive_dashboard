@@ -4,7 +4,6 @@ import 'package:car_dashboard/screens/navigation.dart';
 import 'package:car_dashboard/layouts/bottom_left_bar_layout.dart';
 import 'package:car_dashboard/layouts/bottom_bar_layout.dart';
 import 'package:car_dashboard/layouts/island_layout.dart';
-import 'package:car_dashboard/spotify/spotify_auth_widget.dart';
 
 class MainLayout extends StatelessWidget {
   final Function(bool) onMusicButtonToggle;
