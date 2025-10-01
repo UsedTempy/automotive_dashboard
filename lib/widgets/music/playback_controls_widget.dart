@@ -1,3 +1,4 @@
+import 'package:car_dashboard/auth/spotify_service.dart';
 import 'package:flutter/material.dart';
 
 class PlaybackControlsWidget extends StatefulWidget {
@@ -9,6 +10,58 @@ class PlaybackControlsWidget extends StatefulWidget {
 
 class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
   bool _isPlaying = false;
+  bool _shuffle = false; // track shuffle state
+  String _repeatMode = 'off'; // off, context, track
+
+  @override
+  void initState() {
+    super.initState();
+    _initPlaybackState();
+  }
+
+  /// Fetch the current playback state from Spotify
+  Future<void> _initPlaybackState() async {
+    final playback = await SpotifyService.getCurrentPlayback();
+    if (!mounted) return;
+    setState(() {
+      // Consider playing if progress > 0 and not paused
+      _isPlaying = playback != null && playback["is_playing"] == true;
+      // Optional: fetch shuffle/repeat state from API if you implement it
+    });
+  }
+
+  /// Cycle repeat mode: off → context → track → off
+  void _cycleRepeat() async {
+    String nextMode;
+    switch (_repeatMode) {
+      case 'off':
+        nextMode = 'context';
+        break;
+      case 'context':
+        nextMode = 'track';
+        break;
+      case 'track':
+      default:
+        nextMode = 'off';
+        break;
+    }
+
+    await SpotifyService.setRepeat(nextMode);
+    if (!mounted) return;
+    setState(() {
+      _repeatMode = nextMode;
+    });
+  }
+
+  /// Toggle shuffle
+  void _toggleShuffle() async {
+    final nextState = !_shuffle;
+    await SpotifyService.toggleShuffle(nextState);
+    if (!mounted) return;
+    setState(() {
+      _shuffle = nextState;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,27 +72,30 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Shuffle
             Flexible(
               flex: 3,
               child: FittedBox(
                 child: IconButton(
                   padding: const EdgeInsets.all(12),
-                  onPressed: () {},
-                  icon: const Icon(
+                  onPressed: _toggleShuffle,
+                  icon: Icon(
                     Icons.shuffle,
-                    color: Color(0xFF999999),
+                    color: _shuffle ? Colors.green : Color(0xFF999999),
                     size: 30,
                   ),
                 ),
               ),
             ),
             const Spacer(flex: 1),
+
+            // Previous Track
             Flexible(
               flex: 5,
               child: FittedBox(
                 child: IconButton(
                   padding: const EdgeInsets.all(12),
-                  onPressed: () {},
+                  onPressed: () async => await SpotifyService.previous(),
                   icon: const Icon(
                     Icons.skip_previous_rounded,
                     color: Colors.white,
@@ -50,6 +106,8 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
               ),
             ),
             const Spacer(flex: 1),
+
+            // Play / Pause
             Flexible(
               flex: 6,
               child: FittedBox(
@@ -62,7 +120,13 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
                   ),
                   child: IconButton(
                     padding: EdgeInsets.zero,
-                    onPressed: () {
+                    onPressed: () async {
+                      if (_isPlaying) {
+                        await SpotifyService.pause();
+                      } else {
+                        await SpotifyService.play();
+                      }
+                      if (!mounted) return;
                       setState(() {
                         _isPlaying = !_isPlaying;
                       });
@@ -77,12 +141,14 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
               ),
             ),
             const Spacer(flex: 1),
+
+            // Next Track
             Flexible(
               flex: 5,
               child: FittedBox(
                 child: IconButton(
                   padding: const EdgeInsets.all(12),
-                  onPressed: () {},
+                  onPressed: () async => await SpotifyService.next(),
                   icon: const Icon(
                     Icons.skip_next_rounded,
                     color: Colors.white,
@@ -93,15 +159,18 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
               ),
             ),
             const Spacer(flex: 1),
+
+            // Repeat
             Flexible(
               flex: 3,
               child: FittedBox(
                 child: IconButton(
                   padding: const EdgeInsets.all(12),
-                  onPressed: () {},
-                  icon: const Icon(
+                  onPressed: _cycleRepeat,
+                  icon: Icon(
                     Icons.repeat,
-                    color: Color(0xFF999999),
+                    color:
+                        _repeatMode == 'off' ? Color(0xFF999999) : Colors.green,
                     size: 30,
                   ),
                 ),

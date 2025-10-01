@@ -4,7 +4,7 @@ import 'package:car_dashboard/screens/navigation.dart';
 import 'package:car_dashboard/layouts/bottom_left_bar_layout.dart';
 import 'package:car_dashboard/layouts/bottom_bar_layout.dart';
 import 'package:car_dashboard/layouts/island_layout.dart';
-import 'package:car_dashboard/auth/spotify_service.dart';
+import 'package:car_dashboard/auth/spotify_auth_widget.dart';
 
 class MainLayout extends StatelessWidget {
   final Function(bool) onMusicButtonToggle;
@@ -28,12 +28,6 @@ class MainLayout extends StatelessWidget {
         ),
         const BottomLeftBarLayout(),
         const IslandLayout(),
-
-        // Voeg dit even normaal goed toe ofzo
-        Center(
-            child: SpotifyAuthWidget(
-                serverUrl:
-                    'https://matilde-unconquerable-vincibly.ngrok-free.dev'))
       ],
     );
   }

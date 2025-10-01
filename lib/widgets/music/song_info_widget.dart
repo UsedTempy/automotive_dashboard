@@ -1,7 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:car_dashboard/auth/spotify_service.dart';
 
-class SongInfoWidget extends StatelessWidget {
+class SongInfoWidget extends StatefulWidget {
   const SongInfoWidget({super.key});
+
+  @override
+  State<SongInfoWidget> createState() => _SongInfoWidgetState();
+}
+
+class _SongInfoWidgetState extends State<SongInfoWidget> {
+  String _title = "—";
+  String _artist = "";
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 1️⃣ Get current song immediately
+    SpotifyService.getCurrentlyPlaying().then((song) {
+      if (!mounted) return;
+      if (song != null) {
+        setState(() {
+          _title = song["title"]!;
+          _artist = song["artist"]!;
+        });
+      }
+    });
+
+    // 2️⃣ Subscribe to song changes
+    SpotifyService.startSongListener();
+    SpotifyService.songStream.listen((song) {
+      if (!mounted) return; // prevent setState after dispose
+      if (song != null) {
+        setState(() {
+          _title = song["title"]!;
+          _artist = song["artist"]!;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    SpotifyService.stopSongListener();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +65,7 @@ class SongInfoWidget extends StatelessWidget {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'search & destroy',
+                        _title,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
@@ -38,7 +81,7 @@ class SongInfoWidget extends StatelessWidget {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'ericdoa',
+                        _artist,
                         style: const TextStyle(
                           color: Color(0xFF999999),
                           fontSize: 15,
