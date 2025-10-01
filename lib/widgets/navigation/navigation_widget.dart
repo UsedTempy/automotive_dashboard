@@ -1,6 +1,12 @@
 import 'package:car_dashboard/templates/searchResults.dart';
 import 'package:car_dashboard/widgets/navigation/search_item_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
+import 'package:uuid/uuid.dart';
+import 'package:geolocator/geolocator.dart';
 
 class Navigation extends StatefulWidget {
   const Navigation({super.key});
@@ -11,18 +17,149 @@ class Navigation extends StatefulWidget {
 
 class _NavigationState extends State<Navigation> {
   final TextEditingController _searchController = TextEditingController();
-
   final FocusNode _focusNode = FocusNode();
+  
   bool _showResults = false;
+  bool _isLoading = false;
+  List<SearchResult> _searchResults = [];
+  Timer? _debounce;
+  late String _sessionToken;
+  String _proximity = '6.609763,52.69607'; // Default to Stadskanaal
 
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() {
-      setState(() {
-        _showResults = _searchController.text.isNotEmpty;
-      });
+    _sessionToken = const Uuid().v4();
+    _searchController.addListener(_onSearchChanged);
+    _getUserLocation();
+  }
+
+  Future<void> _getUserLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print('Location services are disabled.');
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          print('Location permissions are denied');
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        print('Location permissions are permanently denied');
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      _proximity = '${position.longitude},${position.latitude}';
+      
+      print('Using current location: $_proximity');
+    } catch (e) {
+      print('Error getting location: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    
+    final query = _searchController.text;
+
+    if (query.isEmpty) {
+      _showResults = false;
+      _searchResults = [];
+      _isLoading = false;
+      setState(() {});
+      return;
+    }
+
+    _showResults = true;
+    _isLoading = true;
+    setState(() {});
+
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      _performSearch(query);
     });
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.isEmpty) return;
+
+    try {
+      final accessToken = dotenv.env['ACCESS_TOKEN'];
+      if (accessToken == null || accessToken.isEmpty) {
+        throw Exception('ACCESS_TOKEN not found in .env file');
+      }
+      
+      final url = Uri.parse(
+        'https://api.mapbox.com/search/searchbox/v1/suggest'
+        '?q=${Uri.encodeComponent(query)}'
+        '&access_token=$accessToken'
+        '&session_token=$_sessionToken'
+        '&language=en'
+        '&limit=6'
+        '&types=country,region,district,postcode,locality,place,neighborhood,address,poi,street,category'
+        '&proximity=$_proximity'
+      );
+
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final suggestions = data['suggestions'] as List<dynamic>;
+
+        final results = suggestions.map((suggestion) {
+          final distance = suggestion['distance'];
+          String distanceStr = '';
+          if (distance != null) {
+            final distanceMeters = distance.toDouble();
+            if (distanceMeters >= 1000) {
+              distanceStr = '${(distanceMeters / 1000).toStringAsFixed(1)} km';
+            } else {
+              distanceStr = '${distanceMeters.toInt()} m';
+            }
+          }
+
+          return SearchResult(
+            name: suggestion['name'] ?? '',
+            location: suggestion['place_formatted'] ?? suggestion['full_address'] ?? '',
+            distance: distanceStr,
+          );
+        }).toList();
+        
+        if (_searchController.text.isNotEmpty) {
+          _searchResults = results;
+          _isLoading = false;
+          setState(() {});
+        }
+      } else {
+        throw Exception('Failed to load search results: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (_searchController.text.isNotEmpty) {
+        _isLoading = false;
+        _searchResults = [];
+        setState(() {});
+      }
+      print('Error performing search: $e');
+    }
   }
 
   @override
@@ -33,7 +170,7 @@ class _NavigationState extends State<Navigation> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(
           minWidth: 280,
-          maxWidth: 280, // stays fixed width
+          maxWidth: 280,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -55,11 +192,21 @@ class _NavigationState extends State<Navigation> {
               child: Row(
                 children: [
                   const SizedBox(width: 8),
-                  const Icon(
-                    Icons.search,
-                    color: Color(0xFF9E9E9E),
-                    size: 14,
-                  ),
+                  if (_isLoading)
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFF9E9E9E),
+                      ),
+                    )
+                  else
+                    const Icon(
+                      Icons.search,
+                      color: Color(0xFF9E9E9E),
+                      size: 14,
+                    ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: TextField(
@@ -67,16 +214,16 @@ class _NavigationState extends State<Navigation> {
                       focusNode: _focusNode,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12.5, // slightly smaller
-                        fontWeight: FontWeight.w500, // less bold while typing
-                        height: 1.2, // tighter line height
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        height: 1.2,
                       ),
                       decoration: const InputDecoration(
                         hintText: 'Navigate',
                         hintStyle: TextStyle(
                           color: Color(0xFF9E9E9E),
                           fontSize: 12.5,
-                          fontWeight: FontWeight.w400, // lighter hint
+                          fontWeight: FontWeight.w400,
                         ),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(vertical: 8),
@@ -84,32 +231,31 @@ class _NavigationState extends State<Navigation> {
                       ),
                     ),
                   ),
-                  if (_searchController.text.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Opacity(
+                      opacity: _searchController.text.isNotEmpty ? 1.0 : 0.0,
                       child: InkWell(
-                        onTap: () {
+                        onTap: _searchController.text.isNotEmpty ? () {
                           _searchController.clear();
-                          setState(() {
-                            _showResults = false;
-                          });
-                        },
+                        } : null,
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
-                          width: 28, // bigger circle for tap
+                          width: 28,
                           height: 28,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2A2A2A),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF2A2A2A),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
                             Icons.clear,
                             color: Color(0xFF9E9E9E),
-                            size: 16, // keep icon size, just bigger circle
+                            size: 16,
                           ),
                         ),
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
@@ -131,20 +277,33 @@ class _NavigationState extends State<Navigation> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: searchResults.map((result) {
-                      return SearchItemWidget(
-                        result: result,
-                        onTap: () {
-                          // Handle location selection
-                          print('Selected: ${result.name}');
-                          _searchController.clear();
-                          _focusNode.unfocus();
-                        },
-                      );
-                    }).toList(),
-                  ),
+                  child: _searchResults.isEmpty && !_isLoading
+                      ? Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            'No results found',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.6),
+                              fontSize: 12,
+                            ),
+                          ),
+                        )
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: _searchResults.map((result) {
+                            return SearchItemWidget(
+                              result: result,
+                              onTap: () {
+                                print('Selected: ${result.name}');
+                                print('Location: ${result.location}');
+                                print('Distance: ${result.distance}');
+                                _searchController.clear();
+                                _focusNode.unfocus();
+                                _sessionToken = const Uuid().v4();
+                              },
+                            );
+                          }).toList(),
+                        ),
                 ),
               ),
           ],
