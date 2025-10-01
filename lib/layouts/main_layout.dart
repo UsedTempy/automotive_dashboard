@@ -28,12 +28,6 @@ class MainLayout extends StatelessWidget {
         ),
         const BottomLeftBarLayout(),
         const IslandLayout(),
-
-        // Voeg dit even normaal goed toe ofzo
-        Center(
-            child: SpotifyAuthWidget(
-                serverUrl:
-                    'https://matilde-unconquerable-vincibly.ngrok-free.dev'))
       ],
     );
   }

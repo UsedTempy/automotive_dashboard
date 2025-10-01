@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:car_dashboard/layouts/music_layouts/login_layout.dart';
 import 'package:car_dashboard/layouts/music_layouts/player_layout.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MusicPlayerLayout extends StatefulWidget {
@@ -27,12 +26,14 @@ class _MusicPlayerLayoutState extends State<MusicPlayerLayout> {
       final prefs = await SharedPreferences.getInstance();
       final accessToken = prefs.getString('SPOTIFY_ACCESS_TOKEN');
       final refreshToken = prefs.getString('SPOTIFY_REFRESH_TOKEN');
-      
+      print(accessToken);
+      print(refreshToken);
+
       setState(() {
-        _hasTokens = accessToken != null && 
-                     refreshToken != null && 
-                     accessToken.isNotEmpty && 
-                     refreshToken.isNotEmpty;
+        _hasTokens = accessToken != null &&
+            refreshToken != null &&
+            accessToken.isNotEmpty &&
+            refreshToken.isNotEmpty;
         _isLoading = false;
       });
     } catch (e) {
@@ -65,10 +66,10 @@ class _MusicPlayerLayoutState extends State<MusicPlayerLayout> {
                 ),
               );
             }
-            
-            return _hasTokens 
-                ? PlayerLayout()
-                : LoginLayout();
+
+            return _hasTokens
+                ? const PlayerLayout()
+                : LoginLayout(onLoginSuccess: refreshLayout); // ✅
           },
         ),
       ),
