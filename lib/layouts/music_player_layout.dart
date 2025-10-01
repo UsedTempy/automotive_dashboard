@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:car_dashboard/widgets/music/album_art_widget.dart';
-import 'package:car_dashboard/widgets/music/playback_controls_widget.dart';
-import 'package:car_dashboard/widgets/music/song_info_widget.dart';
-import 'package:car_dashboard/widgets/music/song_progress_bar_widget.dart';
+import 'package:car_dashboard/layouts/music_layouts/login_layout.dart';
+import 'package:car_dashboard/layouts/music_layouts/player_layout.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MusicPlayerLayout extends StatefulWidget {
   const MusicPlayerLayout({super.key});
@@ -13,6 +13,44 @@ class MusicPlayerLayout extends StatefulWidget {
 }
 
 class _MusicPlayerLayoutState extends State<MusicPlayerLayout> {
+  bool _isLoading = true;
+  bool _hasTokens = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTokens();
+  }
+
+  Future<void> _checkTokens() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final accessToken = prefs.getString('SPOTIFY_ACCESS_TOKEN');
+      final refreshToken = prefs.getString('SPOTIFY_REFRESH_TOKEN');
+      
+      setState(() {
+        _hasTokens = accessToken != null && 
+                     refreshToken != null && 
+                     accessToken.isNotEmpty && 
+                     refreshToken.isNotEmpty;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _hasTokens = false;
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Call this method to refresh the layout after login/logout
+  void refreshLayout() {
+    setState(() {
+      _isLoading = true;
+    });
+    _checkTokens();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,24 +58,17 @@ class _MusicPlayerLayoutState extends State<MusicPlayerLayout> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(flex: 1),        
-                // Album Art
-                AlbumArtWidget(),        
-                const Spacer(flex: 2),
-                // Song Info
-                SongInfoWidget(),
-                const Spacer(flex: 1),
-                // Progress Bar
-                SongProgressBarWidget(),
-                const Spacer(flex: 1),
-                // Playback Controls
-                PlaybackControlsWidget(),
-                const Spacer(flex: 1),
-              ],
-            );
+            if (_isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.green,
+                ),
+              );
+            }
+            
+            return _hasTokens 
+                ? PlayerLayout()
+                : LoginLayout();
           },
         ),
       ),

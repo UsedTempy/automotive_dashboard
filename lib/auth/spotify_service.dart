@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:qr_flutter/qr_flutter.dart';
 
 class SpotifyAuthWidget extends StatefulWidget {
-  final String serverUrl; // e.g., 'http://81.172.187.107:3000'
+  final String serverUrl;
 
   const SpotifyAuthWidget({required this.serverUrl, Key? key})
       : super(key: key);
