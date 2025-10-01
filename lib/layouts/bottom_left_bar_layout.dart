@@ -26,8 +26,8 @@ class BottomLeftBarLayoutState extends State<BottomLeftBarLayout> {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 10, // same bottom as the center buttons/fan
-      left: 30, // spacing from the left edge
+      bottom: 10,
+      left: 30,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

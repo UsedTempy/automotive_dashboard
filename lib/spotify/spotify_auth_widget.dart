@@ -76,11 +76,6 @@ class _SpotifyAuthWidgetState extends State<SpotifyAuthWidget> {
               });
               _pollTimer?.cancel();
 
-              print('🎶 Spotify Tokens: $tokens');
-              print('Access Token: ${tokens?['access_token']}');
-              print('Refresh Token: ${tokens?['refresh_token']}');
-              print('Expires In: ${tokens?['expires_in']}');
-
               // ✅ Save tokens properly
               await prefs.setString(
                   'SPOTIFY_ACCESS_TOKEN', tokens?['access_token'] ?? '');

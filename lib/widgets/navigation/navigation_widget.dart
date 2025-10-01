@@ -18,7 +18,7 @@ class Navigation extends StatefulWidget {
 class _NavigationState extends State<Navigation> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  
+
   bool _showResults = false;
   bool _isLoading = false;
   List<SearchResult> _searchResults = [];
@@ -61,7 +61,7 @@ class _NavigationState extends State<Navigation> {
       );
 
       _proximity = '${position.longitude},${position.latitude}';
-      
+
       print('Using current location: $_proximity');
     } catch (e) {
       print('Error getting location: $e');
@@ -79,7 +79,7 @@ class _NavigationState extends State<Navigation> {
 
   void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    
+
     final query = _searchController.text;
 
     if (query.isEmpty) {
@@ -107,17 +107,15 @@ class _NavigationState extends State<Navigation> {
       if (accessToken == null || accessToken.isEmpty) {
         throw Exception('ACCESS_TOKEN not found in .env file');
       }
-      
-      final url = Uri.parse(
-        'https://api.mapbox.com/search/searchbox/v1/suggest'
-        '?q=${Uri.encodeComponent(query)}'
-        '&access_token=$accessToken'
-        '&session_token=$_sessionToken'
-        '&language=en'
-        '&limit=6'
-        '&types=country,region,district,postcode,locality,place,neighborhood,address,poi,street,category'
-        '&proximity=$_proximity'
-      );
+
+      final url = Uri.parse('https://api.mapbox.com/search/searchbox/v1/suggest'
+          '?q=${Uri.encodeComponent(query)}'
+          '&access_token=$accessToken'
+          '&session_token=$_sessionToken'
+          '&language=en'
+          '&limit=6'
+          '&types=country,region,district,postcode,locality,place,neighborhood,address,poi,street,category'
+          '&proximity=$_proximity');
 
       final response = await http.get(url);
 
@@ -139,18 +137,21 @@ class _NavigationState extends State<Navigation> {
 
           return SearchResult(
             name: suggestion['name'] ?? '',
-            location: suggestion['place_formatted'] ?? suggestion['full_address'] ?? '',
+            location: suggestion['place_formatted'] ??
+                suggestion['full_address'] ??
+                '',
             distance: distanceStr,
           );
         }).toList();
-        
+
         if (_searchController.text.isNotEmpty) {
           _searchResults = results;
           _isLoading = false;
           setState(() {});
         }
       } else {
-        throw Exception('Failed to load search results: ${response.statusCode}');
+        throw Exception(
+            'Failed to load search results: ${response.statusCode}');
       }
     } catch (e) {
       if (_searchController.text.isNotEmpty) {
@@ -236,9 +237,11 @@ class _NavigationState extends State<Navigation> {
                     child: Opacity(
                       opacity: _searchController.text.isNotEmpty ? 1.0 : 0.0,
                       child: InkWell(
-                        onTap: _searchController.text.isNotEmpty ? () {
-                          _searchController.clear();
-                        } : null,
+                        onTap: _searchController.text.isNotEmpty
+                            ? () {
+                                _searchController.clear();
+                              }
+                            : null,
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
                           width: 28,

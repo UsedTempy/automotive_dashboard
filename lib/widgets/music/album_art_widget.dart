@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:car_dashboard/auth/spotify_service.dart';
+import 'package:car_dashboard/spotify/spotify_service.dart';
 
 class AlbumArtWidget extends StatefulWidget {
   const AlbumArtWidget({super.key});

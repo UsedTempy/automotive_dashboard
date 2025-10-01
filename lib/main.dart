@@ -12,8 +12,6 @@ void main() async {
   } catch (e) {
     throw Exception('Error loading .env file: $e');
   }
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.clear();
   runApp(const CarDashboardApp());
 }
 

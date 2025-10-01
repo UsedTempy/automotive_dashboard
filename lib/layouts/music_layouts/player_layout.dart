@@ -25,7 +25,6 @@ class _PlayerLayoutState extends State<PlayerLayout> {
             // Album Art
             AlbumArtWidget(),
             const Spacer(flex: 2),
-
             SizedBox(
               width: double.infinity,
               child: SongInfoWidget(),

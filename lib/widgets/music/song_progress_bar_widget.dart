@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:car_dashboard/auth/spotify_service.dart';
+import 'package:car_dashboard/spotify/spotify_service.dart';
 import 'package:flutter/material.dart';
 
 class SongProgressBarWidget extends StatefulWidget {
