@@ -10,8 +10,8 @@ class PlaybackControlsWidget extends StatefulWidget {
 
 class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
   bool _isPlaying = false;
-  bool _shuffle = false; // track shuffle state
-  String _repeatMode = 'off'; // off, context, track
+  bool _shuffle = false;
+  String _repeatMode = 'off';
 
   @override
   void initState() {
@@ -19,18 +19,17 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
     _initPlaybackState();
   }
 
-  /// Fetch the current playback state from Spotify
   Future<void> _initPlaybackState() async {
     final playback = await SpotifyService.getCurrentPlayback();
     if (!mounted) return;
+
     setState(() {
-      // Consider playing if progress > 0 and not paused
-      _isPlaying = playback != null && playback["is_playing"] == true;
-      // Optional: fetch shuffle/repeat state from API if you implement it
+      _isPlaying = playback?["is_playing"] ?? false;
+      _shuffle = playback?["shuffle_state"] ?? false;
+      _repeatMode = playback?["repeat_state"] ?? "off";
     });
   }
 
-  /// Cycle repeat mode: off → context → track → off
   void _cycleRepeat() async {
     String nextMode;
     switch (_repeatMode) {

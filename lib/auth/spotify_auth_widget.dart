@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SpotifyAuthWidget extends StatefulWidget {
   final String serverUrl;
-  final VoidCallback? onLoginSuccess; // optional callback
+  final VoidCallback? onLoginSuccess;
 
   const SpotifyAuthWidget({
     required this.serverUrl,
@@ -22,7 +22,7 @@ class SpotifyAuthWidget extends StatefulWidget {
 class _SpotifyAuthWidgetState extends State<SpotifyAuthWidget> {
   String? sessionId;
   String? loginUrl;
-  String status = 'waiting'; // waiting, pending, success, error
+  String status = 'waiting';
   Map<String, dynamic>? tokens;
   Timer? _pollTimer;
   @override

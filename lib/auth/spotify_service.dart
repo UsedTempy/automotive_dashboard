@@ -34,15 +34,12 @@ class SpotifyService {
     });
   }
 
-  /// Stop polling
   static void stopSongListener() {
     _pollTimer?.cancel();
   }
 
-  /// Stream to listen for song changes
   static Stream<Map<String, String>?> get songStream => _songController.stream;
 
-  /// Get a valid access token, refresh if expired
   static Future<String?> _getAccessToken() async {
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('SPOTIFY_ACCESS_TOKEN');
@@ -55,9 +52,7 @@ class SpotifyService {
         accessToken.isNotEmpty &&
         refreshToken != null &&
         refreshToken.isNotEmpty) {
-      // Check if token expired
       if (now >= tokenTimestamp + expiresIn) {
-        // Refresh the access token
         return await _refreshAccessToken(refreshToken);
       } else {
         return accessToken;
@@ -66,7 +61,6 @@ class SpotifyService {
     return null;
   }
 
-  /// Refresh access token using refresh token
   static Future<String?> _refreshAccessToken(String refreshToken) async {
     final response = await http.post(
       Uri.parse('https://accounts.spotify.com/api/token'),
@@ -99,7 +93,6 @@ class SpotifyService {
     }
   }
 
-  /// Get the currently playing song
   static Future<Map<String, String>?> getCurrentlyPlaying() async {
     final token = await _getAccessToken();
     if (token == null) return null;
@@ -141,13 +134,15 @@ class SpotifyService {
       return {
         "progress_ms": data["progress_ms"] ?? 0,
         "duration_ms": data["item"]?["duration_ms"] ?? 0,
+        "is_playing": data["is_playing"] ?? false, //
+        "shuffle_state": data["shuffle_state"] ?? false,
+        "repeat_state": data["repeat_state"] ?? "off",
       };
     } else {
       return null;
     }
   }
 
-  /// Playback controls
   static Future<void> play() async {
     final token = await _getAccessToken();
     if (token == null) return;
