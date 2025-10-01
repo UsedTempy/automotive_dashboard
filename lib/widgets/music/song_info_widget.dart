@@ -11,32 +11,42 @@ class SongInfoWidget extends StatefulWidget {
 class _SongInfoWidgetState extends State<SongInfoWidget> {
   String _title = "—";
   String _artist = "";
+  String? _trackId;
+  bool _isFavorite = false;
 
   @override
   void initState() {
     super.initState();
 
     // 1️⃣ Get current song immediately
-    SpotifyService.getCurrentlyPlaying().then((song) {
+    SpotifyService.getCurrentlyPlaying().then((song) async {
+      if (!mounted || song == null) return;
+
+      final liked = await SpotifyService.isTrackSaved(song["id"]!);
       if (!mounted) return;
-      if (song != null) {
-        setState(() {
-          _title = song["title"]!;
-          _artist = song["artist"]!;
-        });
-      }
+
+      setState(() {
+        _title = song["title"]!;
+        _artist = song["artist"]!;
+        _trackId = song["id"];
+        _isFavorite = liked;
+      });
     });
 
     // 2️⃣ Subscribe to song changes
     SpotifyService.startSongListener();
-    SpotifyService.songStream.listen((song) {
-      if (!mounted) return; // prevent setState after dispose
-      if (song != null) {
-        setState(() {
-          _title = song["title"]!;
-          _artist = song["artist"]!;
-        });
-      }
+    SpotifyService.songStream.listen((song) async {
+      if (!mounted || song == null) return;
+
+      final liked = await SpotifyService.isTrackSaved(song["id"]!);
+      if (!mounted) return;
+
+      setState(() {
+        _title = song["title"]!;
+        _artist = song["artist"]!;
+        _trackId = song["id"];
+        _isFavorite = liked;
+      });
     });
   }
 
@@ -44,6 +54,18 @@ class _SongInfoWidgetState extends State<SongInfoWidget> {
   void dispose() {
     SpotifyService.stopSongListener();
     super.dispose();
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_trackId == null) return;
+
+    if (_isFavorite) {
+      await SpotifyService.removeTrack(_trackId!);
+      setState(() => _isFavorite = false);
+    } else {
+      await SpotifyService.saveTrack(_trackId!);
+      setState(() => _isFavorite = true);
+    }
   }
 
   @override
@@ -59,53 +81,42 @@ class _SongInfoWidgetState extends State<SongInfoWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        _title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
+                  Text(
+                    _title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        _artist,
-                        style: const TextStyle(
-                          color: Color(0xFF999999),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
+                  Text(
+                    _artist,
+                    style: const TextStyle(
+                      color: Color(0xFF999999),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-            Flexible(
-              flex: 0,
-              child: FittedBox(
-                child: IconButton(
-                  padding: const EdgeInsets.all(8),
-                  constraints: const BoxConstraints(),
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.favorite_border,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
+            const SizedBox(width: 8),
+            IconButton(
+              padding: const EdgeInsets.all(8),
+              constraints: const BoxConstraints(),
+              onPressed: _toggleFavorite,
+              icon: Icon(
+                _isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: _isFavorite ? Colors.redAccent : Colors.white,
+                size: 26,
               ),
             ),
           ],

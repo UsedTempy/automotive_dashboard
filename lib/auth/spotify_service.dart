@@ -19,7 +19,7 @@ class SpotifyService {
   static Map<String, String>? _lastSong;
 
   /// Start polling the currently playing song every [interval] ms
-  static void startSongListener({int interval = 250}) {
+  static void startSongListener({int interval = 300}) {
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(Duration(milliseconds: interval), (_) async {
       final song = await getCurrentlyPlaying();
@@ -40,6 +40,7 @@ class SpotifyService {
 
   static Stream<Map<String, String>?> get songStream => _songController.stream;
 
+  /// ================= AUTH & TOKEN MANAGEMENT =================
   static Future<String?> _getAccessToken() async {
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('SPOTIFY_ACCESS_TOKEN');
@@ -85,7 +86,6 @@ class SpotifyService {
       await prefs.setInt('SPOTIFY_TOKEN_TIMESTAMP',
           DateTime.now().millisecondsSinceEpoch ~/ 1000);
 
-      print('Access token refreshed: ${data['access_token']}');
       return data['access_token'];
     } else {
       print('Failed to refresh token: ${response.body}');
@@ -93,6 +93,64 @@ class SpotifyService {
     }
   }
 
+  /// ================= API HELPERS =================
+  static Future<dynamic> _get(String endpoint) async {
+    final token = await _getAccessToken();
+    if (token == null) return null;
+
+    final response = await http.get(
+      Uri.parse("https://api.spotify.com/v1$endpoint"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      print("GET $endpoint failed: ${response.statusCode} ${response.body}");
+      return null;
+    }
+  }
+
+  static Future<dynamic> _put(String endpoint,
+      {Map<String, dynamic>? body}) async {
+    final token = await _getAccessToken();
+    if (token == null) return null;
+
+    final response = await http.put(
+      Uri.parse("https://api.spotify.com/v1$endpoint"),
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+      body: body != null ? json.encode(body) : null,
+    );
+
+    if ([200, 201, 204].contains(response.statusCode)) {
+      return true;
+    } else {
+      print("PUT $endpoint failed: ${response.statusCode} ${response.body}");
+      return null;
+    }
+  }
+
+  static Future<dynamic> _delete(String endpoint) async {
+    final token = await _getAccessToken();
+    if (token == null) return null;
+
+    final response = await http.delete(
+      Uri.parse("https://api.spotify.com/v1$endpoint"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+    if ([200, 204].contains(response.statusCode)) {
+      return true;
+    } else {
+      print("DELETE $endpoint failed: ${response.statusCode} ${response.body}");
+      return null;
+    }
+  }
+
+  /// ================= PLAYER CONTROL =================
   static Future<Map<String, String>?> getCurrentlyPlaying() async {
     final token = await _getAccessToken();
     if (token == null) return null;
@@ -111,6 +169,7 @@ class SpotifyService {
         "albumArt": (data["item"]["album"]["images"] as List).isNotEmpty
             ? data["item"]["album"]["images"][0]["url"]
             : "",
+        "id": data["item"]["id"], // needed for like/unlike
       };
     } else if (response.statusCode == 204) {
       return null;
@@ -121,44 +180,15 @@ class SpotifyService {
   }
 
   static Future<Map<String, dynamic>?> getCurrentPlayback() async {
-    final token = await _getAccessToken();
-    if (token == null) return null;
-
-    final response = await http.get(
-      Uri.parse("https://api.spotify.com/v1/me/player"),
-      headers: {"Authorization": "Bearer $token"},
-    );
-
-    if (response.statusCode == 200 && response.body.isNotEmpty) {
-      final data = json.decode(response.body);
-      return {
-        "progress_ms": data["progress_ms"] ?? 0,
-        "duration_ms": data["item"]?["duration_ms"] ?? 0,
-        "is_playing": data["is_playing"] ?? false, //
-        "shuffle_state": data["shuffle_state"] ?? false,
-        "repeat_state": data["repeat_state"] ?? "off",
-      };
-    } else {
-      return null;
-    }
+    return await _get("/me/player");
   }
 
   static Future<void> play() async {
-    final token = await _getAccessToken();
-    if (token == null) return;
-    await http.put(
-      Uri.parse("https://api.spotify.com/v1/me/player/play"),
-      headers: {"Authorization": "Bearer $token"},
-    );
+    await _put("/me/player/play");
   }
 
   static Future<void> pause() async {
-    final token = await _getAccessToken();
-    if (token == null) return;
-    await http.put(
-      Uri.parse("https://api.spotify.com/v1/me/player/pause"),
-      headers: {"Authorization": "Bearer $token"},
-    );
+    await _put("/me/player/pause");
   }
 
   static Future<void> next() async {
@@ -180,20 +210,31 @@ class SpotifyService {
   }
 
   static Future<void> toggleShuffle(bool state) async {
-    final token = await _getAccessToken();
-    if (token == null) return;
-    await http.put(
-      Uri.parse("https://api.spotify.com/v1/me/player/shuffle?state=$state"),
-      headers: {"Authorization": "Bearer $token"},
-    );
+    await _put("/me/player/shuffle?state=$state");
   }
 
   static Future<void> setRepeat(String mode) async {
-    final token = await _getAccessToken();
-    if (token == null) return;
-    await http.put(
-      Uri.parse("https://api.spotify.com/v1/me/player/repeat?state=$mode"),
-      headers: {"Authorization": "Bearer $token"},
-    );
+    await _put("/me/player/repeat?state=$mode");
+  }
+
+  static Future<void> seek(int positionMs) async {
+    await _put("/me/player/seek?position_ms=$positionMs");
+  }
+
+  /// ================= LIBRARY (LIKED SONGS) =================
+  static Future<bool> isTrackSaved(String trackId) async {
+    final response = await _get("/me/tracks/contains?ids=$trackId");
+    if (response != null && response is List && response.isNotEmpty) {
+      return response[0] == true;
+    }
+    return false;
+  }
+
+  static Future<void> saveTrack(String trackId) async {
+    await _put("/me/tracks?ids=$trackId", body: {});
+  }
+
+  static Future<void> removeTrack(String trackId) async {
+    await _delete("/me/tracks?ids=$trackId");
   }
 }

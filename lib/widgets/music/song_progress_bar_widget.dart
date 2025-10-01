@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:car_dashboard/auth/spotify_service.dart';
 import 'package:flutter/material.dart';
 
@@ -12,36 +11,70 @@ class SongProgressBarWidget extends StatefulWidget {
 
 class _SongProgressBarWidgetState extends State<SongProgressBarWidget> {
   double _currentPosition = 0;
-  double _maxDuration = 1; // prevent division by 0
-  Timer? _timer;
+  double _maxDuration = 1;
+  Timer? _syncTimer;
+  Timer? _uiTimer;
+  bool _isDragging = false;
+  bool _isPlaying = false;
+  int _lastProgressMs = 0;
+  DateTime? _lastUpdateTime;
 
   @override
   void initState() {
     super.initState();
-    _startProgressPolling();
+    _startProgressSystem();
   }
 
-  void _startProgressPolling() {
-    _timer = Timer.periodic(const Duration(milliseconds: 500), (_) async {
-      final playback = await SpotifyService.getCurrentPlayback();
-      if (!mounted) return; // <-- prevent setState after dispose
-      if (playback != null) {
+  void _startProgressSystem() {
+    // Sync with Spotify API every 5 seconds
+    _syncTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      await _syncWithSpotify();
+    });
+
+    // Update UI every 100ms for smooth animation
+    _uiTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      if (!_isDragging && _isPlaying && _lastUpdateTime != null) {
+        final now = DateTime.now();
+        final elapsedMs = now.difference(_lastUpdateTime!).inMilliseconds;
+
         setState(() {
-          _currentPosition = playback["progress_ms"] / 1000;
-          _maxDuration = playback["duration_ms"] / 1000;
-        });
-      } else {
-        setState(() {
-          _currentPosition = 0;
-          _maxDuration = 1;
+          _currentPosition =
+              ((_lastProgressMs + elapsedMs) / 1000).clamp(0.0, _maxDuration);
         });
       }
     });
+
+    // Initial sync
+    _syncWithSpotify();
+  }
+
+  Future<void> _syncWithSpotify() async {
+    if (_isDragging) return;
+
+    final playback = await SpotifyService.getCurrentPlayback();
+    if (!mounted) return;
+
+    if (playback != null) {
+      final progress = (playback["progress_ms"] ?? 0) as int;
+      final duration = (playback["item"]?["duration_ms"] ?? 0) as int;
+      final isPlaying = playback["is_playing"] == true;
+
+      if (duration > 0) {
+        setState(() {
+          _maxDuration = duration / 1000;
+          _currentPosition = (progress / 1000).clamp(0.0, _maxDuration);
+          _isPlaying = isPlaying;
+          _lastProgressMs = progress;
+          _lastUpdateTime = DateTime.now();
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _syncTimer?.cancel();
+    _uiTimer?.cancel();
     super.dispose();
   }
 
@@ -70,15 +103,27 @@ class _SongProgressBarWidgetState extends State<SongProgressBarWidget> {
                   thumbColor: Colors.white,
                 ),
                 child: Slider(
-                  value: _currentPosition.clamp(0, _maxDuration),
+                  value: _currentPosition,
                   min: 0,
                   max: _maxDuration,
-                  onChanged: (value) async {
+                  onChangeStart: (_) => _isDragging = true,
+                  onChanged: (value) {
                     setState(() {
                       _currentPosition = value;
                     });
-                    // Optional: seek Spotify to this position
-                    // await SpotifyService.seek(value.toInt() * 1000);
+                  },
+                  onChangeEnd: (value) async {
+                    final seekMs = (value * 1000).toInt();
+                    await SpotifyService.seek(seekMs);
+                    setState(() {
+                      _isDragging = false;
+                      _lastProgressMs = seekMs;
+                      _lastUpdateTime = DateTime.now();
+                    });
+                    // Re-sync after a short delay
+                    Future.delayed(const Duration(milliseconds: 500), () {
+                      if (mounted) _syncWithSpotify();
+                    });
                   },
                 ),
               ),
@@ -89,19 +134,31 @@ class _SongProgressBarWidgetState extends State<SongProgressBarWidget> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  _formatDuration(_currentPosition),
-                  style: const TextStyle(
+                Flexible(
+                  child: Text(
+                    _formatDuration(_currentPosition),
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
                       color: Color(0xFF999999),
                       fontSize: 12,
-                      fontWeight: FontWeight.w400),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
                 ),
-                Text(
-                  _formatDuration(_maxDuration - _currentPosition),
-                  style: const TextStyle(
+                const SizedBox(width: 8), // small spacing buffer
+                Flexible(
+                  child: Text(
+                    _formatDuration(
+                      (_maxDuration - _currentPosition).clamp(0, _maxDuration),
+                    ),
+                    textAlign: TextAlign.right,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
                       color: Color(0xFF999999),
                       fontSize: 12,
-                      fontWeight: FontWeight.w400),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
                 ),
               ],
             ),

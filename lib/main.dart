@@ -1,6 +1,7 @@
 import 'package:car_dashboard/layouts/music_player_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'layouts/main_layout.dart';
 
@@ -11,6 +12,8 @@ void main() async {
   } catch (e) {
     throw Exception('Error loading .env file: $e');
   }
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
   runApp(const CarDashboardApp());
 }
 

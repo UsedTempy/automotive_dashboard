@@ -43,6 +43,7 @@ class _MusicPlayerLayoutState extends State<MusicPlayerLayout> {
       });
     }
   }
+
   void refreshLayout() {
     setState(() {
       _isLoading = true;
