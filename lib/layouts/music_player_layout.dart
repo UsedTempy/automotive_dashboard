@@ -43,8 +43,6 @@ class _MusicPlayerLayoutState extends State<MusicPlayerLayout> {
       });
     }
   }
-
-  // Call this method to refresh the layout after login/logout
   void refreshLayout() {
     setState(() {
       _isLoading = true;
@@ -66,7 +64,6 @@ class _MusicPlayerLayoutState extends State<MusicPlayerLayout> {
                 ),
               );
             }
-
             return _hasTokens
                 ? const PlayerLayout()
                 : LoginLayout(onLoginSuccess: refreshLayout); // ✅

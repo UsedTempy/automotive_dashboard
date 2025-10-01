@@ -1,4 +1,4 @@
-import 'package:car_dashboard/auth/spotify_service.dart';
+import 'package:car_dashboard/auth/spotify_auth_widget.dart';
 import 'package:flutter/material.dart';
 
 class LoginLayout extends StatefulWidget {
