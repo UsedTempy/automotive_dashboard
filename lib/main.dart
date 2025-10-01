@@ -74,9 +74,19 @@ class _DashboardScreenState extends State<DashboardScreen>
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOutCubic,
-                width: _isMusicPlayerVisible ? 250 : 0,
+                width: _isMusicPlayerVisible ? 300 : 0,
                 child: _isMusicPlayerVisible
-                    ? const MusicPlayerLayout()
+                    ? ClipRect(
+                        child: OverflowBox(
+                          alignment: Alignment.centerLeft,
+                          minWidth: 300,
+                          maxWidth: 300,
+                          child: const SizedBox(
+                            width: 300,
+                            child: MusicPlayerLayout(),
+                          ),
+                        ),
+                      )
                     : const SizedBox.shrink(),
               ),
               Expanded(

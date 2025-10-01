@@ -81,7 +81,7 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
                   icon: Icon(
                     Icons.shuffle,
                     color: _shuffle ? Colors.green : Color(0xFF999999),
-                    size: 30,
+                    size: 80,
                   ),
                 ),
               ),
@@ -170,7 +170,7 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
                     Icons.repeat,
                     color:
                         _repeatMode == 'off' ? Color(0xFF999999) : Colors.green,
-                    size: 30,
+                    size: 80,
                   ),
                 ),
               ),

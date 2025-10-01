@@ -73,7 +73,7 @@ class _FlutterMapWidgetState extends State<FlutterMapWidget> {
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    //_getCurrentLocation();
   }
 
   @override

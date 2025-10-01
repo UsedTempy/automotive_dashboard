@@ -13,14 +13,12 @@ class LoginLayout extends StatefulWidget {
 class _LoginLayoutState extends State<LoginLayout> {
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        color: const Color(0xFF111111),
-        child: Center(
-          child: SpotifyAuthWidget(
-            serverUrl: 'https://matilde-unconquerable-vincibly.ngrok-free.dev',
-            onLoginSuccess: widget.onLoginSuccess,
-          ),
+    return Container(
+      color: const Color(0xFF111111),
+      child: Center(
+        child: SpotifyAuthWidget(
+          serverUrl: 'https://matilde-unconquerable-vincibly.ngrok-free.dev',
+          onLoginSuccess: widget.onLoginSuccess,
         ),
       ),
     );

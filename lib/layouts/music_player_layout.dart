@@ -26,8 +26,6 @@ class _MusicPlayerLayoutState extends State<MusicPlayerLayout> {
       final prefs = await SharedPreferences.getInstance();
       final accessToken = prefs.getString('SPOTIFY_ACCESS_TOKEN');
       final refreshToken = prefs.getString('SPOTIFY_REFRESH_TOKEN');
-      print(accessToken);
-      print(refreshToken);
 
       setState(() {
         _hasTokens = accessToken != null &&

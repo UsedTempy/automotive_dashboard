@@ -15,7 +15,7 @@ class _AlbumArtWidgetState extends State<AlbumArtWidget> {
   void initState() {
     super.initState();
 
-    // 1️⃣ Fetch current song immediately
+    //Fetch current song immediately
     SpotifyService.getCurrentlyPlaying().then((song) {
       if (!mounted) return;
       setState(() {
@@ -23,7 +23,7 @@ class _AlbumArtWidgetState extends State<AlbumArtWidget> {
       });
     });
 
-    // 2️⃣ Start listening for updates
+    //Start listening for updates
     SpotifyService.startSongListener();
     SpotifyService.songStream.listen((song) {
       if (!mounted) return;

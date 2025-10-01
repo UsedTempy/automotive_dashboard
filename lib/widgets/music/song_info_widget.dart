@@ -18,7 +18,6 @@ class _SongInfoWidgetState extends State<SongInfoWidget> {
   void initState() {
     super.initState();
 
-    // 1️⃣ Get current song immediately
     SpotifyService.getCurrentlyPlaying().then((song) async {
       if (!mounted || song == null) return;
 
@@ -33,7 +32,6 @@ class _SongInfoWidgetState extends State<SongInfoWidget> {
       });
     });
 
-    // 2️⃣ Subscribe to song changes
     SpotifyService.startSongListener();
     SpotifyService.songStream.listen((song) async {
       if (!mounted || song == null) return;
@@ -70,57 +68,53 @@ class _SongInfoWidgetState extends State<SongInfoWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Flexible(
-      flex: 3,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _artist,
-                    style: const TextStyle(
-                      color: Color(0xFF999999),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _artist,
+                  style: const TextStyle(
+                    color: Color(0xFF999999),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
                   ),
-                ],
-              ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            IconButton(
-              padding: const EdgeInsets.all(8),
-              constraints: const BoxConstraints(),
-              onPressed: _toggleFavorite,
-              icon: Icon(
-                _isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: _isFavorite ? Colors.redAccent : Colors.white,
-                size: 26,
-              ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(),
+            onPressed: _toggleFavorite,
+            icon: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: _isFavorite ? Colors.redAccent : Colors.white,
+              size: 26,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
