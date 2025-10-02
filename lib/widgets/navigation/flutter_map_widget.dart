@@ -28,16 +28,16 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
     super.initState();
     _getCurrentLocation();
 
-    // Live location updates with better accuracy settings
+    // Live location updates with aggressive settings for testing
     Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 1, // Update every 1 meter
+        distanceFilter: 0, // Update on any movement (no minimum distance)
       ),
     ).listen((pos) {
       // Calculate direction of movement from speed and heading
-      if (pos.speed > 0.5 && pos.heading.isFinite && pos.heading >= 0) {
-        // Only update heading if moving (speed > 0.5 m/s)
+      if (pos.speed > 0.3 && pos.heading.isFinite && pos.heading >= 0) {
+        // Only update heading if moving (speed > 0.3 m/s for laptop)
         currentDeviceHeading = pos.heading;
       }
 
