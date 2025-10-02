@@ -27,15 +27,16 @@ class _NavigationState extends State<Navigation> {
   List<SearchResult> _searchResults = [];
   Timer? _debounce;
   late String _sessionToken;
+
   double longPos = 6.609763;
   double latPos = 52.69607;
 
   @override
   void initState() {
     super.initState();
+    _getUserLocation();
     _sessionToken = const Uuid().v4();
     _searchController.addListener(_onSearchChanged);
-    _getUserLocation();
   }
 
   Future<void> _getUserLocation() async {

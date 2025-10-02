@@ -75,13 +75,13 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
   }
 
   // Public method to start navigation with directions
-  Future<void> startNavigation({
+  Future<NavigationData?> startNavigation({
     required double destinationLongitude,
     required double destinationLatitude,
   }) async {
     if (currentLocation == null) {
       print('ERROR: Cannot start navigation - current location not available');
-      return;
+      return null;
     }
 
     print(
@@ -120,6 +120,8 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
     } else {
       print('ERROR: Failed to get navigation data from API');
     }
+
+    return navData;
   }
 
   // Method to clear navigation
@@ -218,16 +220,16 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
           ),
 
         // Clear navigation button (when navigating)
-        if (isNavigating)
-          Positioned(
-            bottom: 85,
-            right: 20,
-            child: FloatingActionButton(
-              onPressed: clearNavigation,
-              backgroundColor: Colors.red,
-              child: const Icon(Icons.close),
-            ),
-          ),
+        // if (isNavigating)
+        //   Positioned(
+        //     bottom: 85,
+        //     right: 20,
+        //     child: FloatingActionButton(
+        //       onPressed: clearNavigation,
+        //       backgroundColor: Colors.red,
+        //       child: const Icon(Icons.close),
+        //     ),
+        //   ),
       ],
     );
   }
