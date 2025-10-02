@@ -1,4 +1,3 @@
-import 'package:car_dashboard/services/navigation_service.dart';
 import 'package:car_dashboard/widgets/navigation/navigation_overlay_widget.dart';
 import 'package:flutter/material.dart';
 
@@ -17,8 +16,8 @@ class NavigationScreenState extends State<NavigationScreen> {
       GlobalKey<FlutterMapWidgetState>();
 
   bool _isNavigating = false;
-  String _totalTime = "10 hr 53 min"; // placeholder
-  String _totalDistance = "1033 km"; // placeholder
+  String _totalTime = "Loading..."; // placeholder
+  String _totalDistance = "Loading..."; // placeholder
 
   void _startNavigation(double lat, double lon) async {
     setState(() {
