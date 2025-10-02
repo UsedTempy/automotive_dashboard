@@ -28,19 +28,22 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
     super.initState();
     _getCurrentLocation();
 
-    // Live location updates
+    // Live location updates with better accuracy settings
     Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 2,
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 1, // Update every 1 meter
+        timeLimit: Duration(seconds: 1), // Update at least every second
       ),
     ).listen((pos) {
+      // Calculate direction of movement from speed and heading
+      if (pos.speed > 0.5 && pos.heading.isFinite && pos.heading >= 0) {
+        // Only update heading if moving (speed > 0.5 m/s)
+        currentDeviceHeading = pos.heading;
+      }
+
       setState(() {
         currentLocation = LatLng(pos.latitude, pos.longitude);
-        // Update device heading from GPS bearing
-        if (pos.heading.isFinite && pos.heading >= 0) {
-          currentDeviceHeading = pos.heading;
-        }
       });
 
       if (isNavigating) {
@@ -109,7 +112,7 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
     if (permission == LocationPermission.deniedForever) return;
 
     final pos = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+      desiredAccuracy: LocationAccuracy.bestForNavigation,
     );
 
     setState(() {
@@ -154,11 +157,13 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
   // Camera aligned with device heading
   void _updateCameraToHeading() {
     if (currentLocation != null) {
-      // Move camera to current location
-      _mapController.move(currentLocation!, 19.5);
-      
-      // Rotate map opposite to device heading so arrow points up
-      _mapController.rotate(-currentDeviceHeading);
+      // Smooth animated move to current location
+      _mapController.moveAndRotate(
+        currentLocation!,
+        19.5,
+        -currentDeviceHeading,
+        id: 'navigation-tracking',
+      );
     }
   }
 
