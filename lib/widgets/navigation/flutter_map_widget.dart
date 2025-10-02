@@ -33,7 +33,6 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.bestForNavigation,
         distanceFilter: 1, // Update every 1 meter
-        timeLimit: Duration(seconds: 1), // Update at least every second
       ),
     ).listen((pos) {
       // Calculate direction of movement from speed and heading
