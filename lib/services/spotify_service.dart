@@ -237,4 +237,41 @@ class SpotifyService {
   static Future<void> removeTrack(String trackId) async {
     await _delete("/me/tracks?ids=$trackId");
   }
+
+  /// ================= QUEUE =================
+  static Future<List<Map<String, String>>> getQueue({int limit = 10}) async {
+    final data = await _get("/me/player/queue");
+    if (data == null || data['queue'] == null) return [];
+
+    final queue = data['queue'] as List;
+    final queueList = <Map<String, String>>[];
+
+    for (var i = 0; i < queue.length && i < limit; i++) {
+      final item = queue[i];
+      queueList.add({
+        "title": item["name"] ?? "Unknown",
+        "artist":
+            (item["artists"] as List?)?.map((a) => a["name"]).join(", ") ??
+                "Unknown Artist",
+        "albumArt": (item["album"]?["images"] as List?)?.isNotEmpty == true
+            ? item["album"]["images"][0]["url"]
+            : "",
+        "id": item["id"] ?? "",
+        "uri": item["uri"] ?? "",
+        "duration": item["duration_ms"]?.toString() ?? "0",
+        "position": i.toString(),
+      });
+    }
+
+    return queueList;
+  }
+
+  static Future<void> skipToQueuePosition(int position) async {
+    // Skip to a song in the queue by calling next() multiple times
+    for (int i = 0; i < position + 1; i++) {
+      await next();
+      // Small delay to ensure Spotify processes each skip
+      await Future.delayed(Duration(milliseconds: 100));
+    }
+  }
 }
