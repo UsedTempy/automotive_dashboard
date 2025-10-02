@@ -10,7 +10,9 @@ import 'package:uuid/uuid.dart';
 import 'package:geolocator/geolocator.dart';
 
 class Navigation extends StatefulWidget {
-  const Navigation({super.key});
+  final Function(double, double)? onNavigate; // Add callback
+
+  const Navigation({super.key, this.onNavigate});
 
   @override
   State<Navigation> createState() => _NavigationState();
@@ -25,7 +27,6 @@ class _NavigationState extends State<Navigation> {
   List<SearchResult> _searchResults = [];
   Timer? _debounce;
   late String _sessionToken;
-  // String _proximity = '6.609763,52.69607'; // Default to Stadskanaal
   double longPos = 6.609763;
   double latPos = 52.69607;
 
@@ -308,7 +309,11 @@ class _NavigationState extends State<Navigation> {
                                           result.id, session_Token);
 
                                   if (locationData != null) {
-                                    NavigationService.getDirections(startLatitude: latPos, startLongitude: longPos, endLongitude: locationData['longitude'], endLatitude: locationData['latitude']);
+                                    // Call the callback to trigger navigation on the map
+                                    widget.onNavigate?.call(
+                                      locationData['latitude']!,
+                                      locationData['longitude']!,
+                                    );
                                   }
 
                                   _searchController.clear();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:latlong2/latlong.dart';
 
 class NavigationService {
   static Future<Map<String, dynamic>?> retrieveLocation(String mapboxId, String sessionToken) async {
@@ -17,8 +18,6 @@ class NavigationService {
         '&access_token=$accessToken'
       );
 
-      print('API Endpoint: $url');
-
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -31,12 +30,9 @@ class NavigationService {
           double longitude = coordinates[0];
           double latitude = coordinates[1];
           
-          print('Coordinates: Longitude: $longitude, Latitude: $latitude');
-          
           return {
             'longitude': longitude,
             'latitude': latitude,
-            // 'fullData': data,
           };
         } else {
           print('No coordinates found in response');
@@ -51,7 +47,7 @@ class NavigationService {
     }
   }
 
-  static Future<Map<String, dynamic>?> getDirections({
+  static Future<NavigationData?> getDirections({
     required double startLongitude,
     required double startLatitude,
     required double endLongitude,
@@ -69,7 +65,7 @@ class NavigationService {
         '?alternatives=true'
         '&annotations=maxspeed,congestion,closure'
         '&banner_instructions=true'
-        '&geometries=polyline6'
+        '&geometries=geojson'
         '&language=en'
         '&overview=full'
         '&roundabout_exits=true'
@@ -79,87 +75,54 @@ class NavigationService {
         '&access_token=$accessToken'
       );
 
-      print('Directions API Endpoint: $url');
+      print('Directions API call initiated');
 
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         
-        print('\n=== DIRECTIONS API RESPONSE ===\n');
-        print('Full Response: ${JsonEncoder.withIndent('  ').convert(data)}');
-        
-        // Parse and print all major data points
+        // Parse routes and extract GeoJSON coordinates
         if (data['routes'] != null && data['routes'].isNotEmpty) {
-          print('\n=== ROUTES (${data['routes'].length} found) ===');
+          final route = data['routes'][0]; // Use the first route
+          final geometry = route['geometry'];
           
-          for (int i = 0; i < data['routes'].length; i++) {
-            final route = data['routes'][i];
-            print('\n--- Route ${i + 1} ---');
-            print('Distance: ${route['distance']} meters (${(route['distance'] / 1000).toStringAsFixed(2)} km)');
-            print('Duration: ${route['duration']} seconds (${(route['duration'] / 60).toStringAsFixed(1)} minutes)');
-            print('Weight: ${route['weight']}');
-            print('Weight Name: ${route['weight_name']}');
+          print('DEBUG: Route geometry type: ${geometry?['type']}');
+          print('DEBUG: Coordinates available: ${geometry?['coordinates'] != null}');
+          
+          // Extract coordinates from GeoJSON LineString
+          List<LatLng> routePoints = [];
+          if (geometry != null && geometry['coordinates'] != null) {
+            final coordinates = geometry['coordinates'] as List;
+            routePoints = coordinates.map((coord) {
+              // GeoJSON format is [longitude, latitude]
+              return LatLng(coord[1].toDouble(), coord[0].toDouble());
+            }).toList();
             
-            if (route['legs'] != null) {
-              print('\nLegs: ${route['legs'].length}');
-              for (int j = 0; j < route['legs'].length; j++) {
-                final leg = route['legs'][j];
-                print('\n  Leg ${j + 1}:');
-                print('  - Distance: ${leg['distance']} meters');
-                print('  - Duration: ${leg['duration']} seconds');
-                print('  - Summary: ${leg['summary']}');
-                
-                if (leg['steps'] != null) {
-                  print('  - Steps: ${leg['steps'].length}');
-                  for (int k = 0; k < leg['steps'].length; k++) {
-                    final step = leg['steps'][k];
-                    print('\n    Step ${k + 1}:');
-                    print('    - Distance: ${step['distance']} meters');
-                    print('    - Duration: ${step['duration']} seconds');
-                    print('    - Name: ${step['name']}');
-                    print('    - Mode: ${step['mode']}');
-                    print('    - Maneuver: ${step['maneuver']?['type']} (${step['maneuver']?['instruction']})');
-                    
-                    if (step['bannerInstructions'] != null) {
-                      print('    - Banner Instructions: ${step['bannerInstructions'].length}');
-                    }
-                    
-                    if (step['voiceInstructions'] != null) {
-                      print('    - Voice Instructions: ${step['voiceInstructions'].length}');
-                    }
-                  }
-                }
-                
-                if (leg['annotation'] != null) {
-                  print('\n  Annotations:');
-                  final annotation = leg['annotation'];
-                  if (annotation['maxspeed'] != null) {
-                    print('  - Max Speed: ${annotation['maxspeed']}');
-                  }
-                  if (annotation['congestion'] != null) {
-                    print('  - Congestion: ${annotation['congestion']}');
-                  }
-                  if (annotation['closure'] != null) {
-                    print('  - Closures: ${annotation['closure']}');
-                  }
-                }
-              }
+            print('DEBUG: Successfully extracted ${routePoints.length} route points');
+            if (routePoints.isNotEmpty) {
+              print('DEBUG: First point: ${routePoints.first}');
+              print('DEBUG: Last point: ${routePoints.last}');
             }
+          } else {
+            print('DEBUG: No geometry or coordinates found in route');
           }
+          
+          final navData = NavigationData(
+            routePoints: routePoints,
+            distance: route['distance']?.toDouble() ?? 0.0,
+            duration: route['duration']?.toDouble() ?? 0.0,
+            rawData: data,
+          );
+          
+          print('DEBUG: NavigationData created - Distance: ${(navData.distance / 1000).toStringAsFixed(2)} km, Duration: ${(navData.duration / 60).toStringAsFixed(1)} min');
+          
+          return navData;
+        } else {
+          print('DEBUG: No routes found in response');
         }
         
-        if (data['waypoints'] != null) {
-          print('\n=== WAYPOINTS ===');
-          for (int i = 0; i < data['waypoints'].length; i++) {
-            final waypoint = data['waypoints'][i];
-            print('Waypoint ${i + 1}: ${waypoint['name']} at ${waypoint['location']}');
-          }
-        }
-        
-        print('\n=== END OF RESPONSE ===\n');
-        
-        return data;
+        return null;
       } else {
         print('Failed to get directions: ${response.statusCode}');
         print('Response body: ${response.body}');
@@ -170,4 +133,18 @@ class NavigationService {
       return null;
     }
   }
+}
+
+class NavigationData {
+  final List<LatLng> routePoints;
+  final double distance;
+  final double duration;
+  final Map<String, dynamic> rawData;
+
+  NavigationData({
+    required this.routePoints,
+    required this.distance,
+    required this.duration,
+    required this.rawData,
+  });
 }
