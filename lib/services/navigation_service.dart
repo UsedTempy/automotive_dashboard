@@ -111,8 +111,43 @@ class NavigationService {
             print('DEBUG: No geometry or coordinates found in route');
           }
 
+          // --- NEW: extract congestion annotations ---
+          List<String> congestion = [];
+          try {
+            if (route['legs'] != null && route['legs'] is List) {
+              for (final leg in route['legs']) {
+                final ann = leg['annotation'];
+                if (ann != null && ann['congestion'] != null) {
+                  final raw = List<dynamic>.from(ann['congestion']);
+                  // normalize: convert null -> 'unknown', keep lowercase, convert 'unknown' -> ''
+                  final normalized = raw.map<String>((e) {
+                    final s = (e == null) ? 'unknown' : e.toString().toLowerCase();
+                    return s == 'unknown' ? '' : s;
+                  }).toList();
+                  congestion.addAll(normalized);
+                }
+              }
+            }
+          } catch (e) {
+            print('DEBUG: Error extracting congestion annotations: $e');
+          }
+
+          // Ensure congestion list length matches number of segments (routePoints.length - 1)
+          final expectedSegments = (routePoints.length > 0) ? (routePoints.length - 1) : 0;
+          if (congestion.length < expectedSegments) {
+            congestion.addAll(List.filled(expectedSegments - congestion.length, ''));
+          } else if (congestion.length > expectedSegments) {
+            congestion = congestion.sublist(0, expectedSegments);
+          }
+
+          print('DEBUG: Congestion segments: ${congestion.length} (expected $expectedSegments)');
+          if (congestion.isNotEmpty) {
+            print('DEBUG: Sample congestion levels: ${congestion.take(6).toList()}');
+          }
+
           final navData = NavigationData(
             routePoints: routePoints,
+            congestion: congestion, // <--- new field
             distance: route['distance']?.toDouble() ?? 0.0,
             duration: route['duration']?.toDouble() ?? 0.0,
             rawData: data,
@@ -141,12 +176,14 @@ class NavigationService {
 
 class NavigationData {
   final List<LatLng> routePoints;
+  final List<String> congestion; // new: per-segment congestion ('' means unknown/skip)
   final double distance;
   final double duration;
   final Map<String, dynamic> rawData;
 
   NavigationData({
     required this.routePoints,
+    required this.congestion,
     required this.distance,
     required this.duration,
     required this.rawData,
