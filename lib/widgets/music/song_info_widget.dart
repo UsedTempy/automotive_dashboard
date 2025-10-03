@@ -126,7 +126,7 @@ class _SongInfoWidgetState extends State<SongInfoWidget> {
           ),
           const SizedBox(width: 8),
           IconButton(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.only(left: 10, bottom: 20),
             constraints: const BoxConstraints(),
             onPressed: _toggleFavorite,
             icon: Icon(

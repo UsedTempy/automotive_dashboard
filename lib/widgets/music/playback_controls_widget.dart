@@ -106,7 +106,7 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
     return Flexible(
       flex: 5,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
