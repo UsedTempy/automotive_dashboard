@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'package:car_dashboard/widgets/navigation/re_center_button.dart';
 import 'package:car_dashboard/services/navigation_service.dart';
@@ -26,7 +27,11 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    if (Platform.isLinux) {
+      return;
+    } else {
+      _getCurrentLocation();
+    }
 
     // Live location updates with aggressive settings for testing
     Geolocator.getPositionStream(
@@ -68,7 +73,8 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
         routePoints.removeAt(0);
         // Recalculate heading when route points change
         if (routePoints.length >= 2) {
-          initialRouteHeading = calculateBearing(routePoints[0], routePoints[1]);
+          initialRouteHeading =
+              calculateBearing(routePoints[0], routePoints[1]);
         }
       } else {
         break;
@@ -186,10 +192,11 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
       setState(() {
         routePoints = navData.routePoints;
         isNavigating = true;
-        
+
         // Calculate and store the initial heading from the first two points
         if (routePoints.length >= 2) {
-          initialRouteHeading = calculateBearing(routePoints[0], routePoints[1]);
+          initialRouteHeading =
+              calculateBearing(routePoints[0], routePoints[1]);
         }
       });
 
@@ -299,7 +306,6 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
               ),
           ],
         ),
-
         if (currentLocation != null && !_isMapCentered)
           Positioned(
             bottom: 85,
