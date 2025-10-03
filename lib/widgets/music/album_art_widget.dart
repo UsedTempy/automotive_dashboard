@@ -46,10 +46,10 @@ class _AlbumArtWidgetState extends State<AlbumArtWidget> {
       child: Center(
         child: LayoutBuilder(
           builder: (context, boxConstraints) {
-            final size =
-                boxConstraints.maxHeight < boxConstraints.maxWidth * 0.8
-                    ? boxConstraints.maxHeight * 0.9
-                    : boxConstraints.maxWidth * 0.7;
+            final baseSize = boxConstraints.maxHeight < boxConstraints.maxWidth
+                ? boxConstraints.maxHeight
+                : boxConstraints.maxWidth;
+            final size = baseSize;
             return Container(
               width: size,
               height: size,

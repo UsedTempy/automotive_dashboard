@@ -2,7 +2,13 @@ import 'package:car_dashboard/services/spotify_service.dart';
 import 'package:flutter/material.dart';
 
 class PlaybackControlsWidget extends StatefulWidget {
-  const PlaybackControlsWidget({super.key});
+  final Future<void> Function()? onSkipNext;
+  final Future<void> Function()? onSkipPrevious;
+  const PlaybackControlsWidget({
+    super.key,
+    this.onSkipNext,
+    this.onSkipPrevious,
+  });
 
   @override
   State<PlaybackControlsWidget> createState() => _PlaybackControlsWidgetState();
@@ -20,6 +26,18 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
   }
 
   Future<void> _initPlaybackState() async {
+    final playback = await SpotifyService.getCurrentPlayback();
+    if (!mounted) return;
+
+    setState(() {
+      _isPlaying = playback?["is_playing"] ?? false;
+      _shuffle = playback?["shuffle_state"] ?? false;
+      _repeatMode = playback?["repeat_state"] ?? "off";
+    });
+  }
+
+  // ✅ Add method to sync playback state
+  Future<void> _syncPlaybackState() async {
     final playback = await SpotifyService.getCurrentPlayback();
     if (!mounted) return;
 
@@ -52,7 +70,6 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
     });
   }
 
-  /// Toggle shuffle
   void _toggleShuffle() async {
     final nextState = !_shuffle;
     await SpotifyService.toggleShuffle(nextState);
@@ -94,7 +111,13 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
               child: FittedBox(
                 child: IconButton(
                   padding: const EdgeInsets.all(12),
-                  onPressed: () async => await SpotifyService.previous(),
+                  onPressed: () async {
+                    // ✅ Call parent callback
+                    await widget.onSkipPrevious?.call();
+                    // ✅ Sync playback state after skipping
+                    await Future.delayed(const Duration(milliseconds: 300));
+                    await _syncPlaybackState();
+                  },
                   icon: const Icon(
                     Icons.skip_previous_rounded,
                     color: Colors.white,
@@ -147,7 +170,13 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
               child: FittedBox(
                 child: IconButton(
                   padding: const EdgeInsets.all(12),
-                  onPressed: () async => await SpotifyService.next(),
+                  onPressed: () async {
+                    // ✅ Call parent callback
+                    await widget.onSkipNext?.call();
+                    // ✅ Sync playback state after skipping
+                    await Future.delayed(const Duration(milliseconds: 300));
+                    await _syncPlaybackState();
+                  },
                   icon: const Icon(
                     Icons.skip_next_rounded,
                     color: Colors.white,

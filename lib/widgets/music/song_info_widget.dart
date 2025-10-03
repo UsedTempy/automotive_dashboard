@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:car_dashboard/services/spotify_service.dart';
+import 'dart:async';
 
 class SongInfoWidget extends StatefulWidget {
   const SongInfoWidget({super.key});
@@ -13,6 +14,7 @@ class _SongInfoWidgetState extends State<SongInfoWidget> {
   String _artist = "";
   String? _trackId;
   bool _isFavorite = false;
+  Timer? _likeStatusTimer;
 
   @override
   void initState() {
@@ -30,6 +32,8 @@ class _SongInfoWidgetState extends State<SongInfoWidget> {
         _trackId = song["id"];
         _isFavorite = liked;
       });
+
+      _startLikeStatusPolling();
     });
 
     SpotifyService.startSongListener();
@@ -45,11 +49,28 @@ class _SongInfoWidgetState extends State<SongInfoWidget> {
         _trackId = song["id"];
         _isFavorite = liked;
       });
+
+      _startLikeStatusPolling();
+    });
+  }
+
+  void _startLikeStatusPolling() {
+    _likeStatusTimer?.cancel();
+    _likeStatusTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      if (!mounted || _trackId == null) return;
+
+      final liked = await SpotifyService.isTrackSaved(_trackId!);
+      if (!mounted) return;
+
+      if (liked != _isFavorite) {
+        setState(() => _isFavorite = liked);
+      }
     });
   }
 
   @override
   void dispose() {
+    _likeStatusTimer?.cancel();
     SpotifyService.stopSongListener();
     super.dispose();
   }
@@ -69,7 +90,7 @@ class _SongInfoWidgetState extends State<SongInfoWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
       child: Row(
         children: [
           Expanded(
@@ -82,7 +103,7 @@ class _SongInfoWidgetState extends State<SongInfoWidget> {
                   _title,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 24,
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
                     letterSpacing: -0.3,
                   ),

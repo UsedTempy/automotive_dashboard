@@ -25,6 +25,7 @@ class _SpotifyAuthWidgetState extends State<SpotifyAuthWidget> {
   String status = 'waiting';
   Map<String, dynamic>? tokens;
   Timer? _pollTimer;
+
   @override
   void initState() {
     super.initState();
@@ -61,36 +62,52 @@ class _SpotifyAuthWidgetState extends State<SpotifyAuthWidget> {
   Future<void> _startPolling() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
-      if (sessionId == null) return;
+      if (sessionId == null || !mounted) return;
 
       try {
         final response = await http.get(Uri.parse(
             '${widget.serverUrl}/session-status?sessionId=$sessionId'));
+
+        // Check mounted after async operation
+        if (!mounted) return;
+
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
           if (data['status'] == 'success') {
-            if (data['status'] == 'success') {
-              setState(() {
-                tokens = data['tokens'];
-                status = 'success';
-              });
-              _pollTimer?.cancel();
+            _pollTimer?.cancel();
 
-              // ✅ Save tokens properly
-              await prefs.setString(
-                  'SPOTIFY_ACCESS_TOKEN', tokens?['access_token'] ?? '');
-              await prefs.setString(
-                  'SPOTIFY_REFRESH_TOKEN', tokens?['refresh_token'] ?? '');
-              await prefs.setInt(
-                  'SPOTIFY_EXPIRES_IN', tokens?['expires_in'] ?? 0);
+            // Check mounted before setState
+            if (!mounted) return;
 
-              if (widget.onLoginSuccess != null) {
-                widget.onLoginSuccess!();
-              }
+            setState(() {
+              tokens = data['tokens'];
+              status = 'success';
+            });
+
+            // Save tokens properly
+            await prefs.setString(
+                'SPOTIFY_ACCESS_TOKEN', tokens?['access_token'] ?? '');
+            await prefs.setString(
+                'SPOTIFY_REFRESH_TOKEN', tokens?['refresh_token'] ?? '');
+            await prefs.setInt(
+                'SPOTIFY_EXPIRES_IN', tokens?['expires_in'] ?? 0);
+            await prefs.setInt('SPOTIFY_TOKEN_TIMESTAMP',
+                DateTime.now().millisecondsSinceEpoch ~/ 1000);
+
+            // Check mounted again before callback
+            if (!mounted) return;
+
+            // Call success callback
+            if (widget.onLoginSuccess != null) {
+              widget.onLoginSuccess!();
             }
           } else if (data['status'] == 'error') {
-            setState(() => status = 'error');
             _pollTimer?.cancel();
+
+            // Check mounted before setState
+            if (!mounted) return;
+
+            setState(() => status = 'error');
           }
         }
       } catch (e) {
@@ -110,16 +127,16 @@ class _SpotifyAuthWidgetState extends State<SpotifyAuthWidget> {
               width: 150,
               height: 150,
               child: QrImageView(
-                backgroundColor: Color.fromARGB(255, 255, 255, 255),
+                backgroundColor: const Color.fromARGB(255, 255, 255, 255),
                 data: loginUrl!,
                 version: QrVersions.auto,
                 size: 250.0,
               ),
             ),
             const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: const Text(
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
                   textAlign: TextAlign.center,
                   style: TextStyle(fontWeight: FontWeight.w600),
                   'Scan this QR code with your phone to login to Spotify'),
@@ -128,10 +145,10 @@ class _SpotifyAuthWidgetState extends State<SpotifyAuthWidget> {
         ),
       );
     } else if (status == 'success') {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             Icon(Icons.check_circle, color: Colors.green, size: 64),
             SizedBox(height: 10),
             Text('Spotify login successful!'),
@@ -142,10 +159,18 @@ class _SpotifyAuthWidgetState extends State<SpotifyAuthWidget> {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.error, color: Colors.red, size: 64),
-            SizedBox(height: 10),
-            Text('Something went wrong!'),
+          children: [
+            const Icon(Icons.error, color: Colors.red, size: 64),
+            const SizedBox(height: 10),
+            const Text('Something went wrong!'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                setState(() => status = 'waiting');
+                _createSession();
+              },
+              child: const Text('Try Again'),
+            ),
           ],
         ),
       );
