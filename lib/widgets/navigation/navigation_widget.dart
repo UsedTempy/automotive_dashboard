@@ -35,7 +35,7 @@ class _NavigationState extends State<Navigation> {
   void initState() {
     super.initState();
     _getUserLocation();
-    _sessionToken = const Uuid().v4();
+    _sessionToken = "1309d86d-7c78-4bb6-b282-b8a2ccc72d3e";
     _searchController.addListener(_onSearchChanged);
   }
 
