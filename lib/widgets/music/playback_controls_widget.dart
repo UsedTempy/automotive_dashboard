@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:car_dashboard/services/spotify_service.dart';
 import 'package:flutter/material.dart';
 
@@ -18,11 +19,19 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
   bool _isPlaying = false;
   bool _shuffle = false;
   String _repeatMode = 'off';
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
     _initPlaybackState();
+    _startPollingPlaybackState();
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _initPlaybackState() async {
@@ -36,15 +45,28 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
     });
   }
 
-  // ✅ Add method to sync playback state
-  Future<void> _syncPlaybackState() async {
-    final playback = await SpotifyService.getCurrentPlayback();
-    if (!mounted) return;
+  // ✅ Poll playback state every 1 second
+  void _startPollingPlaybackState() {
+    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
+      if (!mounted) return;
 
-    setState(() {
-      _isPlaying = playback?["is_playing"] ?? false;
-      _shuffle = playback?["shuffle_state"] ?? false;
-      _repeatMode = playback?["repeat_state"] ?? "off";
+      final playback = await SpotifyService.getCurrentPlayback();
+      if (!mounted) return;
+
+      final newIsPlaying = playback?["is_playing"] ?? false;
+      final newShuffle = playback?["shuffle_state"] ?? false;
+      final newRepeatMode = playback?["repeat_state"] ?? "off";
+
+      // Only update if state changed to avoid unnecessary rebuilds
+      if (_isPlaying != newIsPlaying ||
+          _shuffle != newShuffle ||
+          _repeatMode != newRepeatMode) {
+        setState(() {
+          _isPlaying = newIsPlaying;
+          _shuffle = newShuffle;
+          _repeatMode = newRepeatMode;
+        });
+      }
     });
   }
 
@@ -112,11 +134,7 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
                 child: IconButton(
                   padding: const EdgeInsets.all(12),
                   onPressed: () async {
-                    // ✅ Call parent callback
                     await widget.onSkipPrevious?.call();
-                    // ✅ Sync playback state after skipping
-                    await Future.delayed(const Duration(milliseconds: 300));
-                    await _syncPlaybackState();
                   },
                   icon: const Icon(
                     Icons.skip_previous_rounded,
@@ -171,11 +189,7 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
                 child: IconButton(
                   padding: const EdgeInsets.all(12),
                   onPressed: () async {
-                    // ✅ Call parent callback
                     await widget.onSkipNext?.call();
-                    // ✅ Sync playback state after skipping
-                    await Future.delayed(const Duration(milliseconds: 300));
-                    await _syncPlaybackState();
                   },
                   icon: const Icon(
                     Icons.skip_next_rounded,
