@@ -1,16 +1,27 @@
 import 'package:car_dashboard/layouts/music_player_layout.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_fullscreen/flutter_fullscreen.dart';
 
 import 'layouts/main_layout.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     throw Exception('Error loading .env file: $e');
   }
+  await FullScreen.ensureInitialized();
+
+  final isPi = dotenv.env['IS_PI'] == 'true';
+
+  if (isPi) {
+    FullScreen.setFullScreen(true);
+  }
+
   runApp(const CarDashboardApp());
 }
 
