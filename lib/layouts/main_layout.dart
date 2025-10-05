@@ -22,7 +22,7 @@ class MainLayout extends StatelessWidget {
       alignment: Alignment.bottomCenter,
       children: [
         const NavigationScreen(),
-        const CenterConsoleWidget(),
+        // const CenterConsoleWidget(),
         BottomBarLayout(
           onMusicButtonToggle: onMusicButtonToggle,
           isMusicPlayerVisible: isMusicPlayerVisible,

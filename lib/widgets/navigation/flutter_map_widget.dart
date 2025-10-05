@@ -1,5 +1,6 @@
 import 'dart:math';
-import 'dart:io'; // <-- add this
+import 'dart:io';
+import 'dart:convert';
 import 'package:car_dashboard/widgets/navigation/re_center_button.dart';
 import 'package:car_dashboard/services/navigation_service.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:http/http.dart' as http;
 
 class FlutterMapWidget extends StatefulWidget {
   const FlutterMapWidget({super.key});
@@ -20,11 +22,15 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
   LatLng? currentLocation;
   bool _isMapCentered = true;
   List<LatLng> routePoints = [];
-  List<String> congestionLevels = []; // congestion for each segment
+  List<String> congestionLevels = [];
   bool isNavigating = false;
   bool _followUser = true;
   double? initialRouteHeading;
   double currentDeviceHeading = 0.0;
+
+  // POIs
+  List<Map<String, dynamic>> pois = [];
+  static const double poiVisibleZoomThreshold = 15.0;
 
   @override
   void initState() {
@@ -55,6 +61,124 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
     });
   }
 
+  // Deduplicate POIs with same name and close proximity
+  List<Map<String, dynamic>> _deduplicatePOIs(List<Map<String, dynamic>> rawPOIs) {
+    const double proximityThreshold = 50.0; // meters
+    List<Map<String, dynamic>> deduplicated = [];
+    Map<String, List<Map<String, dynamic>>> groupedByName = {};
+
+    // Group POIs by name
+    for (var poi in rawPOIs) {
+      String name = poi["name"];
+      if (name.isEmpty) {
+        deduplicated.add(poi);
+        continue;
+      }
+      if (!groupedByName.containsKey(name)) {
+        groupedByName[name] = [];
+      }
+      groupedByName[name]!.add(poi);
+    }
+
+    // Process each group
+    for (var group in groupedByName.values) {
+      if (group.length == 1) {
+        deduplicated.add(group[0]);
+        continue;
+      }
+
+      // Cluster nearby POIs with same name
+      List<List<Map<String, dynamic>>> clusters = [];
+      for (var poi in group) {
+        bool addedToCluster = false;
+        for (var cluster in clusters) {
+          // Check if POI is close to any member of this cluster
+          bool isClose = cluster.any((clusterPoi) {
+            double distance = Geolocator.distanceBetween(
+              poi["lat"],
+              poi["lon"],
+              clusterPoi["lat"],
+              clusterPoi["lon"],
+            );
+            return distance <= proximityThreshold;
+          });
+          if (isClose) {
+            cluster.add(poi);
+            addedToCluster = true;
+            break;
+          }
+        }
+        if (!addedToCluster) {
+          clusters.add([poi]);
+        }
+      }
+
+      // For each cluster, create a single POI at the center
+      for (var cluster in clusters) {
+        double avgLat = cluster.map((p) => p["lat"] as double).reduce((a, b) => a + b) / cluster.length;
+        double avgLon = cluster.map((p) => p["lon"] as double).reduce((a, b) => a + b) / cluster.length;
+        deduplicated.add({
+          "lat": avgLat,
+          "lon": avgLon,
+          "type": cluster[0]["type"],
+          "name": cluster[0]["name"],
+        });
+      }
+    }
+
+    return deduplicated;
+  }
+
+  // --- POI FETCHING ---
+  Future<void> fetchPOIs(LatLngBounds bounds) async {
+    final query = '''
+      [out:json];
+      (
+        node["amenity"="restaurant"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
+        node["amenity"="fast_food"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
+        node["amenity"="fuel"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
+        node["shop"="supermarket"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
+        node["railway"="station"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
+        node["railway"="halt"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
+        node["public_transport"="stop_position"]["bus"="yes"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
+        node["highway"="bus_stop"](${bounds.south},${bounds.west},${bounds.north},${bounds.east});
+      );
+      out;
+    ''';
+    final url = Uri.parse('https://overpass-api.de/api/interpreter?data=$query');
+    try {
+      final res = await http.get(url);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final elements = (data["elements"] as List).map((e) {
+          String type = "";
+          if (e["tags"]?["amenity"] != null) {
+            type = e["tags"]["amenity"];
+          } else if (e["tags"]?["shop"] != null) {
+            type = e["tags"]["shop"];
+          } else if (e["tags"]?["railway"] != null) {
+            type = "train_station";
+          } else if (e["tags"]?["highway"] == "bus_stop" || 
+                     e["tags"]?["public_transport"] == "stop_position") {
+            type = "bus_stop";
+          }
+          
+          return {
+            "lat": e["lat"],
+            "lon": e["lon"],
+            "type": type,
+            "name": e["tags"]?["name"] ?? "",
+          };
+        }).toList();
+        
+        final deduplicatedPOIs = _deduplicatePOIs(elements);
+        setState(() => pois = deduplicatedPOIs);
+      }
+    } catch (e) {
+      debugPrint("POI fetch error: $e");
+    }
+  }
+
   LatLngBounds _getCameraBounds(double radiusMeters) {
     if (currentLocation == null) {
       return LatLngBounds(LatLng(0, 0), LatLng(0, 0));
@@ -64,7 +188,9 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
     const earthRadius = 6378137.0;
 
     final dLat = radiusMeters / earthRadius * (180 / pi);
-    final dLon = radiusMeters / (earthRadius * cos(pi * center.latitude / 180)) * (180 / pi);
+    final dLon = radiusMeters /
+        (earthRadius * cos(pi * center.latitude / 180)) *
+        (180 / pi);
 
     return LatLngBounds(
       LatLng(center.latitude - dLat, center.longitude - dLon),
@@ -85,11 +211,10 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
       );
       if (dist < distanceThreshold) {
         routePoints.removeAt(0);
-        if (congestionLevels.isNotEmpty) {
-          congestionLevels.removeAt(0);
-        }
+        if (congestionLevels.isNotEmpty) congestionLevels.removeAt(0);
         if (routePoints.length >= 2) {
-          initialRouteHeading = calculateBearing(routePoints[0], routePoints[1]);
+          initialRouteHeading =
+              calculateBearing(routePoints[0], routePoints[1]);
         }
       } else {
         break;
@@ -100,7 +225,6 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
 
   void _checkIfMapCentered() {
     if (currentLocation == null) return;
-
     final center = _mapController.camera.center;
     final distance = Geolocator.distanceBetween(
       currentLocation!.latitude,
@@ -108,40 +232,31 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
       center.latitude,
       center.longitude,
     );
-
     final isCentered = distance < 10;
     if (isCentered != _isMapCentered) {
-      setState(() {
-        _isMapCentered = isCentered;
-      });
+      setState(() => _isMapCentered = isCentered);
     }
   }
 
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
-
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return;
-
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) return;
     }
     if (permission == LocationPermission.deniedForever) return;
-
-    final pos = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.bestForNavigation,
-    );
-
+    final pos =
+        await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
     setState(() {
       currentLocation = LatLng(pos.latitude, pos.longitude);
       if (pos.heading.isFinite && pos.heading >= 0) {
         currentDeviceHeading = pos.heading;
       }
     });
-
     _mapController.move(currentLocation!, 18);
   }
 
@@ -158,9 +273,7 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
       } else {
         _mapController.move(currentLocation!, 18);
       }
-      setState(() {
-        _isMapCentered = true;
-      });
+      setState(() => _isMapCentered = true);
     }
   }
 
@@ -169,12 +282,10 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
     final lon1 = start.longitude * pi / 180;
     final lat2 = end.latitude * pi / 180;
     final lon2 = end.longitude * pi / 180;
-
     final dLon = lon2 - lon1;
     final y = sin(dLon) * cos(lat2);
     final x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
-    final bearing = atan2(y, x);
-    return (bearing * 180 / pi + 360) % 360;
+    return (atan2(y, x) * 180 / pi + 360) % 360;
   }
 
   void _updateCameraToHeading() {
@@ -193,29 +304,26 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
     required double destinationLatitude,
   }) async {
     if (currentLocation == null) {
-      print('ERROR: Cannot start navigation - current location not available');
+      debugPrint('Cannot start navigation - no location');
       return null;
     }
-
     final navData = await NavigationService.getDirections(
       startLongitude: currentLocation!.longitude,
       startLatitude: currentLocation!.latitude,
       endLongitude: destinationLongitude,
       endLatitude: destinationLatitude,
     );
-
     if (navData != null) {
       setState(() {
         routePoints = navData.routePoints;
-        congestionLevels = navData.congestion; // congestion per segment
+        congestionLevels = navData.congestion;
         isNavigating = true;
         _followUser = true;
-
         if (routePoints.length >= 2) {
-          initialRouteHeading = calculateBearing(routePoints[0], routePoints[1]);
+          initialRouteHeading =
+              calculateBearing(routePoints[0], routePoints[1]);
         }
       });
-
       if (routePoints.length > 1) {
         _mapController.moveAndRotate(
           currentLocation!,
@@ -225,7 +333,6 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
         );
       }
     }
-
     return navData;
   }
 
@@ -251,13 +358,47 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
       case 'severe':
         return Colors.black45;
       default:
-        return Colors.blue; // default/unknown
+        return Colors.blue;
+    }
+  }
+
+  IconData _getIconForPOI(String type) {
+    switch (type) {
+      case "fast_food":
+        return Icons.fastfood;
+      case "fuel":
+        return Icons.local_gas_station;
+      case "supermarket":
+        return Icons.shopping_cart;
+      case "train_station":
+        return Icons.train;
+      case "bus_stop":
+        return Icons.directions_bus;
+      default:
+        return Icons.restaurant;
+    }
+  }
+
+  Color _getColorForPOI(String type) {
+    switch (type) {
+      case "fast_food":
+        return Colors.purple;
+      case "fuel":
+        return Colors.green;
+      case "supermarket":
+        return Colors.blue;
+      case "train_station":
+        return Colors.red;
+      case "bus_stop":
+        return Colors.teal;
+      default:
+        return Colors.orange;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final LatLngBounds bounds = _getCameraBounds(65000); // 65000 meters around camera
+    final LatLngBounds bounds = _getCameraBounds(65000);
 
     return Stack(
       children: [
@@ -266,29 +407,37 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
           options: MapOptions(
             initialCenter: LatLng(51.509364, -0.128928),
             initialZoom: 18,
+            onMapReady: () async => await fetchPOIs(_getCameraBounds(1000)),
             onPositionChanged: (position, hasGesture) {
               if (hasGesture && currentLocation != null) {
                 _followUser = false;
                 _checkIfMapCentered();
+              }
+              // Fetch POIs when moving around
+              if (position.zoom != null && position.center != null) {
+                fetchPOIs(_getCameraBounds(1000));
               }
             },
           ),
           children: [
             TileLayer(
               urlTemplate:
-                  "https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+                  "https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}@2x?access_token={accessToken}",
               additionalOptions: {
                 'accessToken': dotenv.env["ACCESS_TOKEN"]!,
                 'id': 'dark-v11',
               },
+              tileSize: 512,
+              zoomOffset: -1,
             ),
 
-            // Draw route with congestion only if within camera bounds
+            // Draw route
             if (routePoints.isNotEmpty)
               PolylineLayer(
                 polylines: [
                   for (int i = 0; i < routePoints.length - 1; i++)
-                    if (bounds.contains(routePoints[i]) || bounds.contains(routePoints[i + 1]))
+                    if (bounds.contains(routePoints[i]) ||
+                        bounds.contains(routePoints[i + 1]))
                       Polyline(
                         points: [routePoints[i], routePoints[i + 1]],
                         color: i < congestionLevels.length
@@ -299,23 +448,73 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
                 ],
               ),
 
-            if (routePoints.isNotEmpty)
+            // --- POIs ---
+            if (pois.isNotEmpty &&
+                _mapController.camera.zoom >= poiVisibleZoomThreshold)
               MarkerLayer(
-                rotate: true,
-                markers: [
-                  Marker(
-                    point: routePoints.last,
-                    width: 40,
-                    height: 40,
-                    child: const Icon(
-                      Icons.location_on,
-                      color: Colors.red,
-                      size: 40,
+                markers: pois.map((poi) {
+                  final String type = poi["type"];
+                  final String name = poi["name"];
+                  final Color color = _getColorForPOI(type);
+
+                  return Marker(
+                    point: LatLng(poi["lat"], poi["lon"]),
+                    width: 80,
+                    height: 60,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Colored circle with white outline
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: Icon(
+                            _getIconForPOI(type),
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        // Text with white outline stroke
+                        Stack(
+                          children: [
+                            Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                foreground: Paint()
+                                  ..style = PaintingStyle.stroke
+                                  ..strokeWidth = 2.5
+                                  ..color = Colors.white,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  );
+                }).toList(),
               ),
 
+            // Current location marker
             if (isNavigating && currentLocation != null)
               MarkerLayer(
                 markers: [
@@ -348,6 +547,7 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
               ),
           ],
         ),
+
         if (currentLocation != null && !_isMapCentered)
           Positioned(
             bottom: 85,
