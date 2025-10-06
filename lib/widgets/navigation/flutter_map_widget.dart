@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'dart:io'; // <-- add this
+import 'dart:io';
 import 'package:car_dashboard/widgets/navigation/re_center_button.dart';
 import 'package:car_dashboard/services/navigation_service.dart';
 import 'package:flutter/material.dart';
@@ -20,11 +20,15 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
   LatLng? currentLocation;
   bool _isMapCentered = true;
   List<LatLng> routePoints = [];
-  List<String> congestionLevels = []; // congestion for each segment
+  List<String> congestionLevels = [];
   bool isNavigating = false;
   bool _followUser = true;
   double? initialRouteHeading;
   double currentDeviceHeading = 0.0;
+
+  // Store all alternative routes
+  List<NavigationData> allRoutes = [];
+  int selectedRouteIndex = 0;
 
   @override
   void initState() {
@@ -191,26 +195,30 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
     }
   }
 
-  Future<NavigationData?> startNavigation({
+  Future<List<NavigationData>> startNavigation({
     required double destinationLongitude,
     required double destinationLatitude,
+    String profile = 'driving-traffic',
   }) async {
     if (currentLocation == null) {
       print('ERROR: Cannot start navigation - current location not available');
-      return null;
+      return [];
     }
 
-    final navData = await NavigationService.getDirections(
+    final routes = await NavigationService.getDirections(
       startLongitude: currentLocation!.longitude,
       startLatitude: currentLocation!.latitude,
       endLongitude: destinationLongitude,
       endLatitude: destinationLatitude,
+      profile: profile,
     );
 
-    if (navData != null) {
+    if (routes.isNotEmpty) {
       setState(() {
-        routePoints = navData.routePoints;
-        congestionLevels = navData.congestion; // congestion per segment
+        allRoutes = routes;
+        selectedRouteIndex = 0;
+        routePoints = routes[0].routePoints;
+        congestionLevels = routes[0].congestion;
         isNavigating = true;
         _followUser = true;
 
@@ -230,13 +238,39 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
       }
     }
 
-    return navData;
+    return routes;
+  }
+
+  void selectRoute(int index) {
+    if (index >= 0 && index < allRoutes.length) {
+      setState(() {
+        selectedRouteIndex = index;
+        routePoints = allRoutes[index].routePoints;
+        congestionLevels = allRoutes[index].congestion;
+
+        if (routePoints.length >= 2) {
+          initialRouteHeading =
+              calculateBearing(routePoints[0], routePoints[1]);
+        }
+      });
+
+      if (routePoints.length > 1 && currentLocation != null) {
+        _mapController.moveAndRotate(
+          currentLocation!,
+          19.5,
+          -currentDeviceHeading,
+          id: 'route-switch',
+        );
+      }
+    }
   }
 
   void clearNavigation() {
     setState(() {
       routePoints = [];
       congestionLevels = [];
+      allRoutes = [];
+      selectedRouteIndex = 0;
       isNavigating = false;
       initialRouteHeading = null;
       _followUser = true;
@@ -255,14 +289,13 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
       case 'severe':
         return Colors.black45;
       default:
-        return Colors.blue; // default/unknown
+        return Colors.blue;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final LatLngBounds bounds =
-        _getCameraBounds(65000); // 65000 meters around camera
+    final LatLngBounds bounds = _getCameraBounds(65000);
 
     return Stack(
       children: [
@@ -287,8 +320,6 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
                 'id': 'dark-v11',
               },
             ),
-
-            // Draw route with congestion only if within camera bounds
             if (routePoints.isNotEmpty)
               PolylineLayer(
                 polylines: [
@@ -304,7 +335,6 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
                       ),
                 ],
               ),
-
             if (routePoints.isNotEmpty)
               MarkerLayer(
                 rotate: true,
@@ -321,7 +351,6 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
                   ),
                 ],
               ),
-
             if (isNavigating && currentLocation != null)
               MarkerLayer(
                 markers: [
