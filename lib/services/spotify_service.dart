@@ -153,7 +153,7 @@ class SpotifyService {
   /// ================= PLAYER CONTROL =================
   static Future<Map<String, String>?> getCurrentlyPlaying() async {
     final token = await _getAccessToken();
-    if (token == null) return null;
+    if (token == null) return await _loadLastPlayback();
 
     final response = await http.get(
       Uri.parse(_currentlyPlayingUrl),
@@ -162,20 +162,27 @@ class SpotifyService {
 
     if (response.statusCode == 200 && response.body.isNotEmpty) {
       final data = json.decode(response.body);
-      return {
-        "title": data["item"]["name"],
-        "artist":
-            (data["item"]["artists"] as List).map((a) => a["name"]).join(", "),
+      final song = <String, String>{
+        "title": data["item"]["name"] ?? "Unknown",
+        "artist": (data["item"]["artists"] as List)
+                .map((a) => a["name"])
+                .join(", ") ??
+            "Unknown Artist",
         "albumArt": (data["item"]["album"]["images"] as List).isNotEmpty
             ? data["item"]["album"]["images"][0]["url"]
             : "",
-        "id": data["item"]["id"], // needed for like/unlike
+        "id": data["item"]["id"] ?? "",
       };
+
+      // cache playback
+      await _saveLastPlayback(song);
+      return song;
     } else if (response.statusCode == 204) {
-      return null;
+      // no active device → fallback
+      return await _loadLastPlayback();
     } else {
       print("Spotify API error: ${response.statusCode} ${response.body}");
-      return null;
+      return await _loadLastPlayback();
     }
   }
 
@@ -241,29 +248,35 @@ class SpotifyService {
   /// ================= QUEUE =================
   static Future<List<Map<String, String>>> getQueue({int limit = 10}) async {
     final data = await _get("/me/player/queue");
-    if (data == null || data['queue'] == null) return [];
 
-    final queue = data['queue'] as List;
-    final queueList = <Map<String, String>>[];
+    if (data != null && data['queue'] != null) {
+      final queue = data['queue'] as List;
+      final queueList = <Map<String, String>>[];
 
-    for (var i = 0; i < queue.length && i < limit; i++) {
-      final item = queue[i];
-      queueList.add({
-        "title": item["name"] ?? "Unknown",
-        "artist":
-            (item["artists"] as List?)?.map((a) => a["name"]).join(", ") ??
-                "Unknown Artist",
-        "albumArt": (item["album"]?["images"] as List?)?.isNotEmpty == true
-            ? item["album"]["images"][0]["url"]
-            : "",
-        "id": item["id"] ?? "",
-        "uri": item["uri"] ?? "",
-        "duration": item["duration_ms"]?.toString() ?? "0",
-        "position": i.toString(),
-      });
+      for (var i = 0; i < queue.length && i < limit; i++) {
+        final item = queue[i];
+        queueList.add({
+          "title": item["name"] ?? "Unknown",
+          "artist":
+              (item["artists"] as List?)?.map((a) => a["name"]).join(", ") ??
+                  "Unknown Artist",
+          "albumArt": (item["album"]?["images"] as List?)?.isNotEmpty == true
+              ? item["album"]["images"][0]["url"]
+              : "",
+          "id": item["id"] ?? "",
+          "uri": item["uri"] ?? "",
+          "duration": item["duration_ms"]?.toString() ?? "0",
+          "position": i.toString(),
+        });
+      }
+
+      // cache queue
+      await _saveLastQueue(queueList);
+      return queueList;
     }
 
-    return queueList;
+    // fallback when no device
+    return await _loadLastQueue();
   }
 
   static Future<void> skipToQueuePosition(int position) async {
@@ -273,5 +286,45 @@ class SpotifyService {
       // Small delay to ensure Spotify processes each skip
       await Future.delayed(Duration(milliseconds: 100));
     }
+  }
+
+  static Future<void> _saveLastPlayback(Map<String, String> playback) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("LAST_PLAYBACK", json.encode(playback));
+  }
+
+  static Future<Map<String, String>?> _loadLastPlayback() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString("LAST_PLAYBACK");
+    if (str == null) return null;
+    return Map<String, String>.from(json.decode(str));
+  }
+
+  static Future<void> _saveLastQueue(List<Map<String, String>> queue) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("LAST_QUEUE", json.encode(queue));
+  }
+
+  static Future<List<Map<String, String>>> _loadLastQueue() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString("LAST_QUEUE");
+    if (str == null) return [];
+    final data = json.decode(str) as List;
+    return data.map((e) => Map<String, String>.from(e)).toList();
+  }
+
+  static Future<Map<String, dynamic>?> getUserProfile() async {
+    final data = await _get("/me");
+
+    if (data != null) {
+      // Save username to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+          'SPOTIFY_USERNAME', data['display_name'] ?? data['id'] ?? 'User');
+
+      return data;
+    }
+
+    return null;
   }
 }

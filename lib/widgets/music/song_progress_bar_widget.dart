@@ -6,10 +6,10 @@ class SongProgressBarWidget extends StatefulWidget {
   const SongProgressBarWidget({super.key});
 
   @override
-  State<SongProgressBarWidget> createState() => _SongProgressBarWidgetState();
+  State<SongProgressBarWidget> createState() => SongProgressBarWidgetState();
 }
 
-class _SongProgressBarWidgetState extends State<SongProgressBarWidget> {
+class SongProgressBarWidgetState extends State<SongProgressBarWidget> {
   double _currentPosition = 0;
   double _maxDuration = 1;
   Timer? _syncTimer;
@@ -26,12 +26,10 @@ class _SongProgressBarWidgetState extends State<SongProgressBarWidget> {
   }
 
   void _startProgressSystem() {
-    // Sync with Spotify API every 5 seconds
     _syncTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
-      await _syncWithSpotify();
+      await syncWithSpotify();
     });
 
-    // Update UI every 100ms for smooth animation
     _uiTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (!_isDragging && _isPlaying && _lastUpdateTime != null) {
         final now = DateTime.now();
@@ -44,11 +42,10 @@ class _SongProgressBarWidgetState extends State<SongProgressBarWidget> {
       }
     });
 
-    // Initial sync
-    _syncWithSpotify();
+    syncWithSpotify();
   }
 
-  Future<void> _syncWithSpotify() async {
+  Future<void> syncWithSpotify() async {
     if (_isDragging) return;
 
     final playback = await SpotifyService.getCurrentPlayback();
@@ -69,6 +66,14 @@ class _SongProgressBarWidgetState extends State<SongProgressBarWidget> {
         });
       }
     }
+  }
+
+  void resetSlider() {
+    setState(() {
+      _currentPosition = 0;
+      _lastProgressMs = 0;
+      _lastUpdateTime = DateTime.now();
+    });
   }
 
   @override
@@ -122,7 +127,7 @@ class _SongProgressBarWidgetState extends State<SongProgressBarWidget> {
                     });
                     // Re-sync after a short delay
                     Future.delayed(const Duration(milliseconds: 500), () {
-                      if (mounted) _syncWithSpotify();
+                      if (mounted) syncWithSpotify();
                     });
                   },
                 ),
@@ -145,12 +150,10 @@ class _SongProgressBarWidgetState extends State<SongProgressBarWidget> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8), // small spacing buffer
+                const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    _formatDuration(
-                      (_maxDuration - _currentPosition).clamp(0, _maxDuration),
-                    ),
+                    _formatDuration(_maxDuration),
                     textAlign: TextAlign.right,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -162,7 +165,7 @@ class _SongProgressBarWidgetState extends State<SongProgressBarWidget> {
                 ),
               ],
             ),
-          ),
+          )
         ],
       ),
     );
