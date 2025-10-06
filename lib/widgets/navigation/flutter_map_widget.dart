@@ -64,7 +64,9 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
     const earthRadius = 6378137.0;
 
     final dLat = radiusMeters / earthRadius * (180 / pi);
-    final dLon = radiusMeters / (earthRadius * cos(pi * center.latitude / 180)) * (180 / pi);
+    final dLon = radiusMeters /
+        (earthRadius * cos(pi * center.latitude / 180)) *
+        (180 / pi);
 
     return LatLngBounds(
       LatLng(center.latitude - dLat, center.longitude - dLon),
@@ -89,7 +91,8 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
           congestionLevels.removeAt(0);
         }
         if (routePoints.length >= 2) {
-          initialRouteHeading = calculateBearing(routePoints[0], routePoints[1]);
+          initialRouteHeading =
+              calculateBearing(routePoints[0], routePoints[1]);
         }
       } else {
         break;
@@ -212,7 +215,8 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
         _followUser = true;
 
         if (routePoints.length >= 2) {
-          initialRouteHeading = calculateBearing(routePoints[0], routePoints[1]);
+          initialRouteHeading =
+              calculateBearing(routePoints[0], routePoints[1]);
         }
       });
 
@@ -257,7 +261,8 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final LatLngBounds bounds = _getCameraBounds(65000); // 65000 meters around camera
+    final LatLngBounds bounds =
+        _getCameraBounds(65000); // 65000 meters around camera
 
     return Stack(
       children: [
@@ -288,7 +293,8 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
               PolylineLayer(
                 polylines: [
                   for (int i = 0; i < routePoints.length - 1; i++)
-                    if (bounds.contains(routePoints[i]) || bounds.contains(routePoints[i + 1]))
+                    if (bounds.contains(routePoints[i]) ||
+                        bounds.contains(routePoints[i + 1]))
                       Polyline(
                         points: [routePoints[i], routePoints[i + 1]],
                         color: i < congestionLevels.length
