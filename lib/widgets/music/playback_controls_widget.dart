@@ -1,8 +1,15 @@
+import 'dart:async';
 import 'package:car_dashboard/services/spotify_service.dart';
 import 'package:flutter/material.dart';
 
 class PlaybackControlsWidget extends StatefulWidget {
-  const PlaybackControlsWidget({super.key});
+  final Future<void> Function()? onSkipNext;
+  final Future<void> Function()? onSkipPrevious;
+  const PlaybackControlsWidget({
+    super.key,
+    this.onSkipNext,
+    this.onSkipPrevious,
+  });
 
   @override
   State<PlaybackControlsWidget> createState() => _PlaybackControlsWidgetState();
@@ -12,11 +19,19 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
   bool _isPlaying = false;
   bool _shuffle = false;
   String _repeatMode = 'off';
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
     _initPlaybackState();
+    _startPollingPlaybackState();
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _initPlaybackState() async {
@@ -27,6 +42,31 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
       _isPlaying = playback?["is_playing"] ?? false;
       _shuffle = playback?["shuffle_state"] ?? false;
       _repeatMode = playback?["repeat_state"] ?? "off";
+    });
+  }
+
+  // ✅ Poll playback state every 1 second
+  void _startPollingPlaybackState() {
+    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
+      if (!mounted) return;
+
+      final playback = await SpotifyService.getCurrentPlayback();
+      if (!mounted) return;
+
+      final newIsPlaying = playback?["is_playing"] ?? false;
+      final newShuffle = playback?["shuffle_state"] ?? false;
+      final newRepeatMode = playback?["repeat_state"] ?? "off";
+
+      // Only update if state changed to avoid unnecessary rebuilds
+      if (_isPlaying != newIsPlaying ||
+          _shuffle != newShuffle ||
+          _repeatMode != newRepeatMode) {
+        setState(() {
+          _isPlaying = newIsPlaying;
+          _shuffle = newShuffle;
+          _repeatMode = newRepeatMode;
+        });
+      }
     });
   }
 
@@ -52,7 +92,6 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
     });
   }
 
-  /// Toggle shuffle
   void _toggleShuffle() async {
     final nextState = !_shuffle;
     await SpotifyService.toggleShuffle(nextState);
@@ -67,7 +106,7 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
     return Flexible(
       flex: 5,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -94,7 +133,9 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
               child: FittedBox(
                 child: IconButton(
                   padding: const EdgeInsets.all(12),
-                  onPressed: () async => await SpotifyService.previous(),
+                  onPressed: () async {
+                    await widget.onSkipPrevious?.call();
+                  },
                   icon: const Icon(
                     Icons.skip_previous_rounded,
                     color: Colors.white,
@@ -147,7 +188,9 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
               child: FittedBox(
                 child: IconButton(
                   padding: const EdgeInsets.all(12),
-                  onPressed: () async => await SpotifyService.next(),
+                  onPressed: () async {
+                    await widget.onSkipNext?.call();
+                  },
                   icon: const Icon(
                     Icons.skip_next_rounded,
                     color: Colors.white,

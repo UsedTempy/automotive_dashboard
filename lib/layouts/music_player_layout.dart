@@ -64,8 +64,8 @@ class _MusicPlayerLayoutState extends State<MusicPlayerLayout> {
               );
             }
             return _hasTokens
-                ? const PlayerLayout()
-                : LoginLayout(onLoginSuccess: refreshLayout); // ✅
+                ? PlayerLayout(onLogout: refreshLayout) // ✅ Pass callback
+                : LoginLayout(onLoginSuccess: refreshLayout);
           },
         ),
       ),
