@@ -1,17 +1,27 @@
 import 'package:car_dashboard/layouts/music_player_layout.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_fullscreen/flutter_fullscreen.dart';
 
 import 'layouts/main_layout.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     throw Exception('Error loading .env file: $e');
   }
+  await FullScreen.ensureInitialized();
+
+  final isPi = dotenv.env['IS_PI'] == 'true';
+
+  if (isPi) {
+    FullScreen.setFullScreen(true);
+  }
+
   runApp(const CarDashboardApp());
 }
 
@@ -67,31 +77,39 @@ class _DashboardScreenState extends State<DashboardScreen>
             ],
           ),
           clipBehavior: Clip.hardEdge,
-          child: Row(
+          child: Stack(
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOutCubic,
-                width: _isMusicPlayerVisible ? 300 : 0,
-                child: _isMusicPlayerVisible
-                    ? ClipRect(
-                        child: OverflowBox(
-                          alignment: Alignment.centerLeft,
-                          minWidth: 300,
-                          maxWidth: 300,
-                          child: const SizedBox(
-                            width: 300,
-                            child: MusicPlayerLayout(),
-                          ),
+              Row(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOutCubic,
+                    width: _isMusicPlayerVisible ? 300 : 0,
+                    child: _isMusicPlayerVisible
+                        ? ClipRect(
+                            child: OverflowBox(
+                              alignment: Alignment.centerLeft,
+                              minWidth: 300,
+                              maxWidth: 300,
+                              child: const SizedBox(
+                                width: 300,
+                                child: MusicPlayerLayout(),
+                              ),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        MainLayout(
+                          onMusicButtonToggle: _toggleMusicPlayer,
+                          isMusicPlayerVisible: _isMusicPlayerVisible,
                         ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              Expanded(
-                child: MainLayout(
-                  onMusicButtonToggle: _toggleMusicPlayer,
-                  isMusicPlayerVisible: _isMusicPlayerVisible,
-                ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -1,3 +1,4 @@
+import 'package:car_dashboard/widgets/console/center_console_widget.dart';
 import 'package:flutter/material.dart';
 
 import 'package:car_dashboard/screens/navigation.dart';
@@ -21,6 +22,7 @@ class MainLayout extends StatelessWidget {
       alignment: Alignment.bottomCenter,
       children: [
         const NavigationScreen(),
+        const CenterConsoleWidget(),
         BottomBarLayout(
           onMusicButtonToggle: onMusicButtonToggle,
           isMusicPlayerVisible: isMusicPlayerVisible,
