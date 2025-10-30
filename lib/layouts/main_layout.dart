@@ -1,3 +1,4 @@
+import 'package:car_dashboard/layouts/providers_island_layout.dart';
 import 'package:car_dashboard/widgets/console/center_console_widget.dart';
 import 'package:flutter/material.dart';
 
@@ -29,6 +30,7 @@ class MainLayout extends StatelessWidget {
         ),
         const BottomLeftBarLayout(),
         const IslandLayout(),
+        const ProvidersIslandLayout()
       ],
     );
   }
