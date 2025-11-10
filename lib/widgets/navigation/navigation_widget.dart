@@ -301,7 +301,8 @@ class _NavigationState extends State<Navigation> {
                             return SearchItemWidget(
                                 result: result,
                                 onTap: () async {
-                                  final session_Token = "1309d86d-7c78-4bb6-b282-b8a2ccc72d3e"; // const Uuid().v4();
+                                  final session_Token =
+                                      "1309d86d-7c78-4bb6-b282-b8a2ccc72d3e"; // const Uuid().v4();
                                   print('Selected: ${result.id}');
 
                                   // Retrieve coordinates

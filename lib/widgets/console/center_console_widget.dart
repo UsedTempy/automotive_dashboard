@@ -14,7 +14,7 @@ class CenterConsoleWidget extends StatefulWidget {
   const CenterConsoleWidget({
     super.key,
     this.speedLimit = 67,
-    this.speed = 72, 
+    this.speed = 72,
     this.gear = 1,
     this.fuelPercentage = 20,
     this.estimatedKm = 500,
@@ -71,11 +71,11 @@ class _CenterConsoleWidgetState extends State<CenterConsoleWidget>
   /// Calculates the warning color with a smooth opacity transition.
   Color _getSpeedWarningColor(int speed, int speedLimit) {
     if (speed <= speedLimit) {
-      return Colors.transparent; 
+      return Colors.transparent;
     }
 
     final overspeed = (speed - speedLimit).toDouble();
-    final rawOpacity = overspeed * 0.1; 
+    final rawOpacity = overspeed * 0.1;
     final opacity = rawOpacity.clamp(0.0, 0.5);
 
     return Colors.red.withOpacity(opacity);
@@ -87,20 +87,19 @@ class _CenterConsoleWidgetState extends State<CenterConsoleWidget>
   Widget build(BuildContext context) {
     final width = 500 * 0.66;
     final height = 200 * 0.75;
-    
+
     final warningColor = _getSpeedWarningColor(widget.speed, widget.speedLimit);
     final isSpeeding = widget.speed > widget.speedLimit;
 
-    final speedTextColor = isSpeeding 
-      ? warningColor.withOpacity(0.9) 
-      : Colors.white;
+    final speedTextColor =
+        isSpeeding ? warningColor.withOpacity(0.9) : Colors.white;
 
     final lightColor = _getLightColor(lightMode);
 
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 20),
+        padding: const EdgeInsets.only(bottom: 75, left: 400),
         child: Container(
           width: width,
           height: height,
@@ -157,23 +156,22 @@ class _CenterConsoleWidgetState extends State<CenterConsoleWidget>
                           duration: const Duration(milliseconds: 400),
                           curve: Curves.easeOut,
                           style: TextStyle(
-                            color: speedTextColor,
-                            fontSize: 40, 
-                            fontWeight: FontWeight.w900,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withOpacity(0.5),
-                                offset: const Offset(0, 1),
-                                blurRadius: 2,
-                              ),
-                            ]
-                          ),
+                              color: speedTextColor,
+                              fontSize: 40,
+                              fontWeight: FontWeight.w900,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.5),
+                                  offset: const Offset(0, 1),
+                                  blurRadius: 2,
+                                ),
+                              ]),
                           child: Text(
                             '${widget.speed}',
                           ),
                         ),
                         // 👆 END MODIFIED SPEED DISPLAY
-                        
+
                         const SizedBox(height: 4),
                         Column(
                           children: [
@@ -212,7 +210,8 @@ class _CenterConsoleWidgetState extends State<CenterConsoleWidget>
                               decoration: BoxDecoration(
                                 color: Colors.white12,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white24, width: 2),
+                                border:
+                                    Border.all(color: Colors.white24, width: 2),
                               ),
                               child: Center(
                                 child: CustomPaint(
@@ -227,7 +226,8 @@ class _CenterConsoleWidgetState extends State<CenterConsoleWidget>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            lightMode.name[0].toUpperCase() + lightMode.name.substring(1).toLowerCase(),
+                            lightMode.name[0].toUpperCase() +
+                                lightMode.name.substring(1).toLowerCase(),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white70,
@@ -295,7 +295,7 @@ class CircularFuelIndicator extends StatelessWidget {
               child: Icon(
                 Icons.local_gas_station,
                 color: Colors.white70,
-                size: 24, 
+                size: 24,
               ),
             ),
           ],
@@ -326,7 +326,7 @@ class _FuelFluidPainter extends CustomPainter {
     path.moveTo(0, size.height);
     path.lineTo(0, height);
 
-    const waveAmplitude = 1.5; 
+    const waveAmplitude = 1.5;
     const waveFrequency = 2.0;
 
     // Draw the top line as a sine wave
@@ -372,18 +372,23 @@ class HeadlightIconPainter extends CustomPainter {
         // Off: Circle with a diagonal line through it
         final center = Offset(width / 2, height / 2);
         canvas.drawCircle(center, width * 0.35, paint);
-        canvas.drawLine(Offset(width * 0.1, height * 0.9), Offset(width * 0.9, height * 0.1), paint);
+        canvas.drawLine(Offset(width * 0.1, height * 0.9),
+            Offset(width * 0.9, height * 0.1), paint);
         break;
 
       case LightMode.city:
         // City/Parking: Two sets of symmetrical lights pointing down-left and down-right.
         // Left side light lines (down-left angle)
         paint.strokeWidth = 1.5;
-        canvas.drawLine(Offset(width * 0.35, height * 0.3), Offset(width * 0.1, height * 0.55), paint);
-        canvas.drawLine(Offset(width * 0.5, height * 0.45), Offset(width * 0.25, height * 0.7), paint);
+        canvas.drawLine(Offset(width * 0.35, height * 0.3),
+            Offset(width * 0.1, height * 0.55), paint);
+        canvas.drawLine(Offset(width * 0.5, height * 0.45),
+            Offset(width * 0.25, height * 0.7), paint);
         // Right side light lines (down-right angle)
-        canvas.drawLine(Offset(width * 0.65, height * 0.3), Offset(width * 0.9, height * 0.55), paint);
-        canvas.drawLine(Offset(width * 0.5, height * 0.45), Offset(width * 0.75, height * 0.7), paint);
+        canvas.drawLine(Offset(width * 0.65, height * 0.3),
+            Offset(width * 0.9, height * 0.55), paint);
+        canvas.drawLine(Offset(width * 0.5, height * 0.45),
+            Offset(width * 0.75, height * 0.7), paint);
         break;
 
       case LightMode.normal:
@@ -397,7 +402,7 @@ class HeadlightIconPainter extends CustomPainter {
           ..lineTo(width * 0.5, height * 0.2)
           ..close();
         canvas.drawPath(headLightPath, paint);
-        
+
         // Angled beams (down-right)
         paint.strokeWidth = 1.5;
         for (int i = 0; i < 3; i++) {

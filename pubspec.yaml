@@ -44,6 +44,9 @@ dependencies:
     uni_links: ^0.5.1
     shared_preferences: ^2.2.2
     flutter_fullscreen: ^1.2.0
+    three_js: ^0.2.6
+    material_symbols_icons: ^4.2874.0
+    
 
 
 
@@ -67,6 +70,7 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
     assets:
+        - assets/models/
         - .env
 
     # The following line ensures that the Material Icons font is

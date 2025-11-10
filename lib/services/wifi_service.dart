@@ -21,7 +21,6 @@ class WifiService {
         final result = await InternetAddress.lookup('google.com');
         if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
           hasInternet.value = true;
-          log('connected: ${hasInternet.value}');
         }
       } on SocketException catch (_) {
         hasInternet.value = false;

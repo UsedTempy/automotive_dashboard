@@ -1,3 +1,4 @@
+import 'package:car_dashboard/layouts/car_view_layout/3d_model_layout.dart';
 import 'package:car_dashboard/layouts/providers_island_layout.dart';
 import 'package:car_dashboard/widgets/console/center_console_widget.dart';
 import 'package:flutter/material.dart';
@@ -22,15 +23,29 @@ class MainLayout extends StatelessWidget {
     return Stack(
       alignment: Alignment.bottomCenter,
       children: [
-        const NavigationScreen(),
-        const CenterConsoleWidget(),
+        // Use a Column to divide the screen vertically
+        Row(
+          children: [
+            const Expanded(
+              flex: 1,
+              child: ModelLayout(),
+            ),
+            Expanded(
+              flex: 2,
+              child: const NavigationScreen(),
+            ),
+          ],
+        ),
+        const BottomLeftBarLayout(),
+
         BottomBarLayout(
           onMusicButtonToggle: onMusicButtonToggle,
           isMusicPlayerVisible: isMusicPlayerVisible,
         ),
-        const BottomLeftBarLayout(),
+
         const IslandLayout(),
-        const ProvidersIslandLayout()
+        const ProvidersIslandLayout(),
+        //const CenterConsoleWidget(),
       ],
     );
   }
