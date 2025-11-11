@@ -9,7 +9,8 @@ class CenterButton extends StatefulWidget {
   final Color activeColor;
   final int fanSpeed;
 
-  const CenterButton({
+  const 
+  CenterButton({
     this.icon,
     this.imagePath,
     required this.isSelected,

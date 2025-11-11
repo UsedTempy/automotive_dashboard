@@ -46,6 +46,7 @@ dependencies:
     flutter_fullscreen: ^1.2.0
     three_js: ^0.2.6
     material_symbols_icons: ^4.2874.0
+    provider: ^6.1.5+1
     
 
 

@@ -1,5 +1,7 @@
+import 'package:car_dashboard/controllers/camera_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:three_js/three_js.dart' as three;
+import 'package:provider/provider.dart';
 
 class ModelWidget extends StatefulWidget {
   const ModelWidget({super.key});
@@ -36,6 +38,8 @@ class _ModelWidgetState extends State<ModelWidget> {
     final size = MediaQuery.of(context).size;
     final modelWidth = size.width / 3;
     final modelHeight = size.height;
+    final cameraController = context.read<CameraController>();
+
 
     threeJs.camera = three.PerspectiveCamera(
       35,
@@ -46,6 +50,7 @@ class _ModelWidgetState extends State<ModelWidget> {
 
     threeJs.camera.position.setValues(cameraX, cameraY, cameraZ);
     threeJs.camera.lookAt(three.Vector3(0, 0.7, 0.56));
+    cameraController.setCamera(threeJs.camera);
 
     threeJs.scene = three.Scene();
     threeJs.scene.background = three.Color(0.09, 0.09, 0.086);

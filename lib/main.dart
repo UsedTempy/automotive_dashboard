@@ -1,8 +1,11 @@
+import 'package:car_dashboard/controllers/camera_controller.dart';
+import 'package:car_dashboard/layouts/car_view_layout/3d_model_layout.dart';
 import 'package:car_dashboard/layouts/music_player_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_fullscreen/flutter_fullscreen.dart';
+import 'package:provider/provider.dart';
 
 import 'layouts/main_layout.dart';
 
@@ -22,7 +25,12 @@ void main() async {
     FullScreen.setFullScreen(true);
   }
 
-  runApp(const CarDashboardApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CameraController(),
+      child: const CarDashboardApp(),
+    ),
+  );
 }
 
 class CarDashboardApp extends StatelessWidget {
@@ -49,15 +57,25 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen>
     with SingleTickerProviderStateMixin {
   bool _isMusicPlayerVisible = false;
+  bool _isCarModelVisible = false;
 
   void _toggleMusicPlayer(bool isVisible) {
     setState(() {
       _isMusicPlayerVisible = isVisible;
+      if (isVisible) _isCarModelVisible = false;
+    });
+  }
+
+  void _toggleCarModel(bool isVisible) {
+    setState(() {
+      _isCarModelVisible = isVisible;
+      if (isVisible) _isMusicPlayerVisible = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
       body: Center(
@@ -99,10 +117,33 @@ class _DashboardScreenState extends State<DashboardScreen>
                           )
                         : const SizedBox.shrink(),
                   ),
+
+                  // Keep the car model in the tree but control visibility with Offstage
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOutCubic,
+                    width: _isCarModelVisible ? (1280 / 3) : 0,
+                    child: Offstage(
+                      offstage: !_isCarModelVisible,
+                      child: ClipRect(
+                        child: OverflowBox(
+                          alignment: Alignment.centerLeft,
+                          child: SizedBox(
+                            width: screenWidth / 3,
+                            child: ModelLayout(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Main content area
                   Expanded(
                     child: Stack(
                       children: [
                         MainLayout(
+                          onCarButtonToggle: _toggleCarModel,
+                          isCarModelVisible: _isCarModelVisible,
                           onMusicButtonToggle: _toggleMusicPlayer,
                           isMusicPlayerVisible: _isMusicPlayerVisible,
                         ),
