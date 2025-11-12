@@ -22,21 +22,46 @@ class _PlayerLayoutState extends State<PlayerLayout> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width / 3; // 1/3 screen width
+
     return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600),
+      child: Container(
+        width: width,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 16),
             LogoutButton(onLogout: widget.onLogout),
-            const Spacer(flex: 1),
-            AlbumArtWidget(),
-            const Spacer(flex: 2),
-            SizedBox(width: double.infinity, child: SongInfoWidget()),
-            const Spacer(flex: 1),
+            const SizedBox(height: 24),
+
+            // === Album Art ===
+            Flexible(
+              flex: 4,
+              child: AspectRatio(
+                aspectRatio: 1, // keep square shape
+                child: AlbumArtWidget(),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // === Song Info ===
+            Flexible(
+              flex: 1,
+              child: SizedBox(
+                width: double.infinity,
+                child: SongInfoWidget(),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // === Progress Bar ===
             SongProgressBarWidget(key: sliderKey),
-            const Spacer(flex: 1),
+
+            const SizedBox(height: 20),
+
+            // === Playback Controls ===
             PlaybackControlsWidget(
               onSkipNext: () async {
                 sliderKey.currentState?.resetSlider();
@@ -53,8 +78,14 @@ class _PlayerLayoutState extends State<PlayerLayout> {
                 });
               },
             ),
-            const SizedBox(height: 10),
-            QueueWidget(),
+
+            const SizedBox(height: 24),
+
+            // === Queue ===
+            Expanded(
+              flex: 3,
+              child: QueueWidget(),
+            ),
           ],
         ),
       ),

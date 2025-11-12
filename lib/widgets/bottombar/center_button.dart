@@ -9,8 +9,7 @@ class CenterButton extends StatefulWidget {
   final Color activeColor;
   final int fanSpeed;
 
-  const 
-  CenterButton({
+  const CenterButton({
     this.icon,
     this.imagePath,
     required this.isSelected,
@@ -18,7 +17,7 @@ class CenterButton extends StatefulWidget {
     this.activeColor = Colors.blue,
     this.fanSpeed = 1,
   }) : assert(icon != null || imagePath != null,
-  'Either icon or imagePath must be provided');
+            'Either icon or imagePath must be provided');
 
   @override
   State<CenterButton> createState() => _CenterButtonState();
@@ -194,7 +193,7 @@ class _CenterButtonState extends State<CenterButton>
                   bottom: 2,
                   child: AnimatedBuilder(
                     animation:
-                    Listenable.merge([_hoverController, _bounceController]),
+                        Listenable.merge([_hoverController, _bounceController]),
                     builder: (_, __) {
                       double width = _hoverAnim.value;
                       if (_bounceController.isAnimating)

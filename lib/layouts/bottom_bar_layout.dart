@@ -90,22 +90,17 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
         ),
       ),
       child: Stack(
-        alignment: Alignment.center,
+        alignment: Alignment.centerLeft,
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: CenterButton(
-              icon: Icons.directions_car,
-              isSelected: widget.isCarModelVisible,
-              onTap: _toggleCarButton,
-              activeColor: Colors.blueAccent,
-            ),
-          ),
-
-          // Center buttons
           Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              CenterButton(
+                icon: Icons.directions_car,
+                isSelected: widget.isCarModelVisible,
+                onTap: _toggleCarButton,
+                activeColor: Colors.blueAccent,
+              ),
               CenterButton(
                 icon: Icons.location_on,
                 isSelected: selectedCenterButton == "gps",

@@ -26,15 +26,11 @@ class MainLayout extends StatelessWidget {
       alignment: Alignment.bottomCenter,
       children: [
         const NavigationScreen(),
-        BottomBarLayout(
-          onMusicButtonToggle: onMusicButtonToggle,
-          isMusicPlayerVisible: isMusicPlayerVisible,
-          isCarModelVisible: isCarModelVisible,
-          onCarButtonToggle: onCarButtonToggle,
-        ),
+
         const IslandLayout(),
         const ProvidersIslandLayout(),
         //const CenterConsoleWidget(),
+        
       ],
     );
   }
