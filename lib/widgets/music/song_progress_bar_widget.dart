@@ -91,76 +91,66 @@ class SongProgressBarWidgetState extends State<SongProgressBarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Flexible(
-      flex: 2,
+    return Container(
+      height: 80,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: SliderTheme(
-                data: const SliderThemeData(
-                  trackHeight: 3,
-                  thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6),
-                  overlayShape: RoundSliderOverlayShape(overlayRadius: 12),
-                  activeTrackColor: Colors.white,
-                  inactiveTrackColor: Color(0xFF3A3A3A),
-                  thumbColor: Colors.white,
-                ),
-                child: Slider(
-                  value: _currentPosition,
-                  min: 0,
-                  max: _maxDuration,
-                  onChangeStart: (_) => _isDragging = true,
-                  onChanged: (value) {
-                    setState(() {
-                      _currentPosition = value;
-                    });
-                  },
-                  onChangeEnd: (value) async {
-                    final seekMs = (value * 1000).toInt();
-                    await SpotifyService.seek(seekMs);
-                    setState(() {
-                      _isDragging = false;
-                      _lastProgressMs = seekMs;
-                      _lastUpdateTime = DateTime.now();
-                    });
-                    // Re-sync after a short delay
-                    Future.delayed(const Duration(milliseconds: 500), () {
-                      if (mounted) syncWithSpotify();
-                    });
-                  },
-                ),
-              ),
+          SliderTheme(
+            data: const SliderThemeData(
+              trackHeight: 3,
+              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6),
+              overlayShape: RoundSliderOverlayShape(overlayRadius: 12),
+              activeTrackColor: Colors.white,
+              inactiveTrackColor: Color(0xFF3A3A3A),
+              thumbColor: Colors.white,
+            ),
+            child: Slider(
+              value: _currentPosition,
+              min: 0,
+              max: _maxDuration,
+              onChangeStart: (_) => _isDragging = true,
+              onChanged: (value) {
+                setState(() {
+                  _currentPosition = value;
+                });
+              },
+              onChangeEnd: (value) async {
+                final seekMs = (value * 1000).toInt();
+                await SpotifyService.seek(seekMs);
+                setState(() {
+                  _isDragging = false;
+                  _lastProgressMs = seekMs;
+                  _lastUpdateTime = DateTime.now();
+                });
+                Future.delayed(const Duration(milliseconds: 500), () {
+                  if (mounted) syncWithSpotify();
+                });
+              },
             ),
           ),
+          const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
-                  child: Text(
-                    _formatDuration(_currentPosition),
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFF999999),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                    ),
+                Text(
+                  _formatDuration(_currentPosition),
+                  style: const TextStyle(
+                    color: Color(0xFF999999),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    _formatDuration(_maxDuration),
-                    textAlign: TextAlign.right,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFF999999),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                    ),
+                Text(
+                  _formatDuration(_maxDuration),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    color: Color(0xFF999999),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ],

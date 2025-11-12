@@ -45,7 +45,6 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
     });
   }
 
-  // ✅ Poll playback state every 1 second
   void _startPollingPlaybackState() {
     _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
       if (!mounted) return;
@@ -57,7 +56,6 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
       final newShuffle = playback?["shuffle_state"] ?? false;
       final newRepeatMode = playback?["repeat_state"] ?? "off";
 
-      // Only update if state changed to avoid unnecessary rebuilds
       if (_isPlaying != newIsPlaying ||
           _shuffle != newShuffle ||
           _repeatMode != newRepeatMode) {
@@ -103,119 +101,92 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Flexible(
-      flex: 5,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
+    return Container(
+      height: 80,
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      child: OverflowBox(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Shuffle
-            Flexible(
-              flex: 3,
-              child: FittedBox(
-                child: IconButton(
-                  padding: const EdgeInsets.all(12),
-                  onPressed: _toggleShuffle,
-                  icon: Icon(
-                    Icons.shuffle,
-                    color: _shuffle ? Colors.green : Color(0xFF999999),
-                    size: 80,
-                  ),
-                ),
+            IconButton(
+              padding: const EdgeInsets.all(12),
+              onPressed: _toggleShuffle,
+              icon: Icon(
+                Icons.shuffle,
+                color: _shuffle ? Colors.green : Color(0xFF999999),
+                size: 24,
               ),
             ),
-            const Spacer(flex: 1),
+            const SizedBox(width: 8),
 
             // Previous Track
-            Flexible(
-              flex: 5,
-              child: FittedBox(
-                child: IconButton(
-                  padding: const EdgeInsets.all(12),
-                  onPressed: () async {
-                    await widget.onSkipPrevious?.call();
-                  },
-                  icon: const Icon(
-                    Icons.skip_previous_rounded,
-                    color: Colors.white,
-                    size: 54,
-                    weight: 700,
-                  ),
-                ),
+            IconButton(
+              padding: const EdgeInsets.all(12),
+              onPressed: () async {
+                await widget.onSkipPrevious?.call();
+              },
+              icon: const Icon(
+                Icons.skip_previous_rounded,
+                color: Colors.white,
+                size: 40,
+                weight: 700,
               ),
             ),
-            const Spacer(flex: 1),
+            const SizedBox(width: 8),
 
             // Play / Pause
-            Flexible(
-              flex: 6,
-              child: FittedBox(
-                child: Container(
-                  width: 68,
-                  height: 68,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    onPressed: () async {
-                      if (_isPlaying) {
-                        await SpotifyService.pause();
-                      } else {
-                        await SpotifyService.play();
-                      }
-                      if (!mounted) return;
-                      setState(() {
-                        _isPlaying = !_isPlaying;
-                      });
-                    },
-                    icon: Icon(
-                      _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
-                      color: Colors.black,
-                      size: 38,
-                    ),
-                  ),
+            Container(
+              width: 60,
+              height: 60,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                onPressed: () async {
+                  if (_isPlaying) {
+                    await SpotifyService.pause();
+                  } else {
+                    await SpotifyService.play();
+                  }
+                  if (!mounted) return;
+                  setState(() {
+                    _isPlaying = !_isPlaying;
+                  });
+                },
+                icon: Icon(
+                  _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
+                  color: Colors.black,
+                  size: 32,
                 ),
               ),
             ),
-            const Spacer(flex: 1),
+            const SizedBox(width: 8),
 
             // Next Track
-            Flexible(
-              flex: 5,
-              child: FittedBox(
-                child: IconButton(
-                  padding: const EdgeInsets.all(12),
-                  onPressed: () async {
-                    await widget.onSkipNext?.call();
-                  },
-                  icon: const Icon(
-                    Icons.skip_next_rounded,
-                    color: Colors.white,
-                    size: 54,
-                    weight: 700,
-                  ),
-                ),
+            IconButton(
+              padding: const EdgeInsets.all(12),
+              onPressed: () async {
+                await widget.onSkipNext?.call();
+              },
+              icon: const Icon(
+                Icons.skip_next_rounded,
+                color: Colors.white,
+                size: 40,
+                weight: 700,
               ),
             ),
-            const Spacer(flex: 1),
+            const SizedBox(width: 8),
 
             // Repeat
-            Flexible(
-              flex: 3,
-              child: FittedBox(
-                child: IconButton(
-                  padding: const EdgeInsets.all(12),
-                  onPressed: _cycleRepeat,
-                  icon: Icon(
-                    Icons.repeat,
-                    color:
-                        _repeatMode == 'off' ? Color(0xFF999999) : Colors.green,
-                    size: 80,
-                  ),
-                ),
+            IconButton(
+              padding: const EdgeInsets.all(12),
+              onPressed: _cycleRepeat,
+              icon: Icon(
+                Icons.repeat,
+                color: _repeatMode == 'off' ? Color(0xFF999999) : Colors.green,
+                size: 24,
               ),
             ),
           ],

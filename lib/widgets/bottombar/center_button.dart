@@ -8,6 +8,7 @@ class CenterButton extends StatefulWidget {
   final VoidCallback onTap;
   final Color activeColor;
   final int fanSpeed;
+  final bool isEnabled;
 
   const CenterButton({
     this.icon,
@@ -16,6 +17,7 @@ class CenterButton extends StatefulWidget {
     required this.onTap,
     this.activeColor = Colors.blue,
     this.fanSpeed = 1,
+    this.isEnabled = true,
   }) : assert(icon != null || imagePath != null,
             'Either icon or imagePath must be provided');
 
@@ -63,7 +65,7 @@ class _CenterButtonState extends State<CenterButton>
     _rotationAnim =
         Tween<double>(begin: 0, end: 1).animate(_rotationController);
 
-    if (widget.isSelected) {
+    if (widget.isSelected && widget.isEnabled) {
       _colorController.value = 1.0;
       _bounceController.forward(from: 0);
       if (widget.icon == FontAwesomeIcons.fan) _rotationController.repeat();
@@ -78,11 +80,12 @@ class _CenterButtonState extends State<CenterButton>
         widget.icon == FontAwesomeIcons.fan) {
       _rotationController.duration =
           Duration(milliseconds: _getRotationDuration(widget.fanSpeed));
-      if (widget.isSelected) _rotationController.repeat();
+      if (widget.isSelected && widget.isEnabled) _rotationController.repeat();
     }
 
-    if (widget.isSelected != oldWidget.isSelected) {
-      if (widget.isSelected) {
+    if (widget.isSelected != oldWidget.isSelected ||
+        widget.isEnabled != oldWidget.isEnabled) {
+      if (widget.isSelected && widget.isEnabled) {
         _colorController.forward();
         _bounceController.forward(from: 0);
         if (widget.icon == FontAwesomeIcons.fan) _rotationController.repeat();
@@ -119,6 +122,8 @@ class _CenterButtonState extends State<CenterButton>
   }
 
   void _onHover(bool hovering) {
+    if (!widget.isEnabled) return;
+
     setState(() => _hovering = hovering);
     if (hovering) {
       _hoverController.forward();
@@ -135,81 +140,87 @@ class _CenterButtonState extends State<CenterButton>
       onEnter: (_) => _onHover(true),
       onExit: (_) => _onHover(false),
       child: GestureDetector(
-        onTap: widget.onTap,
+        onTap: widget.isEnabled ? widget.onTap : null,
         behavior: HitTestBehavior.translucent,
-        child: SizedBox(
-          width: 50,
-          height: 50,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              AnimatedBuilder(
-                animation: Listenable.merge([_iconColorAnim, _rotationAnim]),
-                builder: (_, __) {
-                  Widget iconWidget;
-                  if (widget.imagePath != null) {
-                    iconWidget = Image.asset(
-                      widget.imagePath!,
-                      width: 22,
-                      height: 22,
-                      color: widget.isSelected
-                          ? widget.activeColor
-                          : _iconColorAnim.value,
-                    );
-                  } else {
-                    iconWidget = FaIcon(
-                      widget.icon!,
-                      size: 22,
-                      color: _iconColorAnim.value,
-                    );
-
-                    if (widget.icon == FontAwesomeIcons.fan &&
-                        widget.isSelected) {
-                      iconWidget = Transform.rotate(
-                        angle: _rotationAnim.value * 2 * 3.14159,
-                        child: iconWidget,
+        child: Opacity(
+          opacity: widget.isEnabled ? 1.0 : 0.3,
+          child: SizedBox(
+            width: 50,
+            height: 50,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                AnimatedBuilder(
+                  animation: Listenable.merge([_iconColorAnim, _rotationAnim]),
+                  builder: (_, __) {
+                    Widget iconWidget;
+                    if (widget.imagePath != null) {
+                      iconWidget = Image.asset(
+                        widget.imagePath!,
+                        width: 22,
+                        height: 22,
+                        color: widget.isSelected && widget.isEnabled
+                            ? widget.activeColor
+                            : _iconColorAnim.value,
                       );
+                    } else {
+                      iconWidget = FaIcon(
+                        widget.icon!,
+                        size: 22,
+                        color: widget.isSelected && widget.isEnabled
+                            ? widget.activeColor
+                            : _iconColorAnim.value,
+                      );
+
+                      if (widget.icon == FontAwesomeIcons.fan &&
+                          widget.isSelected &&
+                          widget.isEnabled) {
+                        iconWidget = Transform.rotate(
+                          angle: _rotationAnim.value * 2 * 3.14159,
+                          child: iconWidget,
+                        );
+                      }
                     }
-                  }
-                  return iconWidget;
-                },
-              ),
-              if (!widget.isSelected)
-                Positioned(
-                  bottom: 2,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 120),
-                    curve: Curves.easeOut,
-                    width: _hovering ? hoverWidth : 0,
-                    height: 2,
-                    decoration: BoxDecoration(
-                      color: _hovering ? Colors.grey[300] : Colors.grey[700],
-                      borderRadius: BorderRadius.circular(1),
+                    return iconWidget;
+                  },
+                ),
+                if (!widget.isSelected && widget.isEnabled)
+                  Positioned(
+                    bottom: 2,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      curve: Curves.easeOut,
+                      width: _hovering ? hoverWidth : 0,
+                      height: 2,
+                      decoration: BoxDecoration(
+                        color: _hovering ? Colors.grey[300] : Colors.grey[700],
+                        borderRadius: BorderRadius.circular(1),
+                      ),
                     ),
                   ),
-                ),
-              if (widget.isSelected)
-                Positioned(
-                  bottom: 2,
-                  child: AnimatedBuilder(
-                    animation:
-                        Listenable.merge([_hoverController, _bounceController]),
-                    builder: (_, __) {
-                      double width = _hoverAnim.value;
-                      if (_bounceController.isAnimating)
-                        width = _bounceAnim.value;
-                      return Container(
-                        height: 2,
-                        width: width,
-                        decoration: BoxDecoration(
-                          color: widget.activeColor,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      );
-                    },
+                if (widget.isSelected && widget.isEnabled)
+                  Positioned(
+                    bottom: 2,
+                    child: AnimatedBuilder(
+                      animation: Listenable.merge(
+                          [_hoverController, _bounceController]),
+                      builder: (_, __) {
+                        double width = _hoverAnim.value;
+                        if (_bounceController.isAnimating)
+                          width = _bounceAnim.value;
+                        return Container(
+                          height: 2,
+                          width: width,
+                          decoration: BoxDecoration(
+                            color: widget.activeColor,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

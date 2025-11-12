@@ -57,42 +57,41 @@ class _QueueWidgetState extends State<QueueWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 10, right: 10, left: 10),
+      padding: const EdgeInsets.only(top: 10, right: 10, left: 10, bottom: 20),
       child: Container(
-        height: 200,
         decoration: BoxDecoration(
           color: Color.fromRGBO(17, 17, 17, 1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Next in Queue',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+              child: Text(
+                'Next in Queue',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-            Expanded(
-              child: _isLoading
-                  ? Center(
+            _isLoading
+                ? Container(
+                    height: 200,
+                    child: Center(
                       child: CircularProgressIndicator(
                         color: Colors.white70,
                         strokeWidth: 2,
                       ),
-                    )
-                  : _queue.isEmpty
-                      ? Center(
+                    ),
+                  )
+                : _queue.isEmpty
+                    ? Container(
+                        height: 200,
+                        child: Center(
                           child: Text(
                             'No songs in queue',
                             style: TextStyle(
@@ -100,88 +99,88 @@ class _QueueWidgetState extends State<QueueWidget> {
                               fontSize: 14,
                             ),
                           ),
-                        )
-                      : ListView.builder(
-                          itemCount: _queue.length,
-                          itemBuilder: (context, index) {
-                            final song = _queue[index];
-                            return InkWell(
-                              onTap: () async {
-                                final position =
-                                    int.tryParse(song['position'] ?? '0');
-                                if (position != null) {
-                                  await SpotifyService.skipToQueuePosition(
-                                      position);
-                                }
-                              },
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                child: Row(
-                                  children: [
-                                    // Album Art
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child:
-                                          song['albumArt']?.isNotEmpty == true
-                                              ? Image.network(
-                                                  song['albumArt']!,
-                                                  width: 40,
-                                                  height: 40,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (_, __, ___) =>
-                                                      _buildPlaceholder(),
-                                                )
-                                              : _buildPlaceholder(),
-                                    ),
-                                    SizedBox(width: 12),
-                                    // Song Info
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            song['title'] ?? 'Unknown',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                        ),
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: _queue.map((song) {
+                          return InkWell(
+                            onTap: () async {
+                              final position =
+                                  int.tryParse(song['position'] ?? '0');
+                              if (position != null) {
+                                await SpotifyService.skipToQueuePosition(
+                                    position);
+                              }
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    clipBehavior: Clip.hardEdge,
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: song['albumArt']?.isNotEmpty == true
+                                        ? Image.network(
+                                            song['albumArt']!,
+                                            width: 40,
+                                            height: 40,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                _buildPlaceholder(),
+                                          )
+                                        : _buildPlaceholder(),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          song['title'] ?? 'Unknown',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
                                           ),
-                                          SizedBox(height: 2),
-                                          Text(
-                                            song['artist'] ?? 'Unknown Artist',
-                                            style: TextStyle(
-                                              color: Colors.white60,
-                                              fontSize: 12,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          song['artist'] ?? 'Unknown Artist',
+                                          style: TextStyle(
+                                            color: Colors.white60,
+                                            fontSize: 12,
                                           ),
-                                        ],
-                                      ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ),
-                                    SizedBox(width: 20),
-                                    // Duration
-                                    Text(
+                                  ),
+                                  SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 40,
+                                    child: Text(
                                       _formatDuration(song['duration'] ?? '0'),
                                       style: TextStyle(
                                         color: Colors.white54,
                                         fontSize: 12,
                                       ),
+                                      textAlign: TextAlign.right,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            );
-                          },
-                        ),
-            ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
           ],
         ),
       ),

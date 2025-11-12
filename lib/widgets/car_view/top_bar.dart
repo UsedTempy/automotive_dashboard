@@ -21,6 +21,8 @@ class CarTopBarState extends State<CarTopBar> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
                   '40',
                   style: TextStyle(fontSize: 58),
                 )
@@ -30,6 +32,8 @@ class CarTopBarState extends State<CarTopBar> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
                   'KM/H',
                   style: TextStyle(
                       fontSize: 18, color: Colors.white.withOpacity(0.5)),

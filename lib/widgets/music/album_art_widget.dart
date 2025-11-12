@@ -15,7 +15,7 @@ class _AlbumArtWidgetState extends State<AlbumArtWidget> {
   void initState() {
     super.initState();
 
-    //Fetch current song immediately
+    // Fetch current song immediately
     SpotifyService.getCurrentlyPlaying().then((song) {
       if (!mounted) return;
       setState(() {
@@ -23,7 +23,7 @@ class _AlbumArtWidgetState extends State<AlbumArtWidget> {
       });
     });
 
-    //Start listening for updates
+    // Start listening for updates
     SpotifyService.startSongListener();
     SpotifyService.songStream.listen((song) {
       if (!mounted) return;
@@ -41,40 +41,29 @@ class _AlbumArtWidgetState extends State<AlbumArtWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Flexible(
-      flex: 12,
-      child: Center(
-        child: LayoutBuilder(
-          builder: (context, boxConstraints) {
-            final baseSize = boxConstraints.maxHeight < boxConstraints.maxWidth
-                ? boxConstraints.maxHeight
-                : boxConstraints.maxWidth;
-            final size = baseSize;
-            return Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: const Color(0xFF2C4A6E),
-                image: _albumArtUrl != null && _albumArtUrl!.isNotEmpty
-                    ? DecorationImage(
-                        image: NetworkImage(_albumArtUrl!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-              ),
-              child: _albumArtUrl == null || _albumArtUrl!.isEmpty
-                  ? Center(
-                      child: Icon(
-                        Icons.music_note_rounded,
-                        color: const Color(0xFF5A7BA8),
-                        size: size * 0.35,
-                      ),
-                    )
-                  : null,
-            );
-          },
+    return Center(
+      child: Container(
+        width: 250,
+        height: 250,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: const Color(0xFF2C4A6E),
+          image: _albumArtUrl != null && _albumArtUrl!.isNotEmpty
+              ? DecorationImage(
+                  image: NetworkImage(_albumArtUrl!),
+                  fit: BoxFit.cover,
+                )
+              : null,
         ),
+        child: _albumArtUrl == null || _albumArtUrl!.isEmpty
+            ? Center(
+                child: Icon(
+                  Icons.music_note_rounded,
+                  color: const Color(0xFF5A7BA8),
+                  size: 87.5, // 250 * 0.35
+                ),
+              )
+            : null,
       ),
     );
   }

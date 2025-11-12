@@ -111,13 +111,14 @@ class _LogoutButtonState extends State<LogoutButton> {
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
-        padding: const EdgeInsets.only(left: 16),
+        padding: const EdgeInsets.only(left: 16, right: 16),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: _logout,
             borderRadius: BorderRadius.circular(16),
             child: Container(
+              constraints: BoxConstraints(maxWidth: 250),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: const Color(0xFF282828),
@@ -142,12 +143,16 @@ class _LogoutButtonState extends State<LogoutButton> {
                           ),
                         ),
                   const SizedBox(width: 8),
-                  Text(
-                    _username,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  Flexible(
+                    child: Text(
+                      _username,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 6),

@@ -25,6 +25,7 @@ class BottomBarLayout extends StatefulWidget {
 class _BottomBarLayoutState extends State<BottomBarLayout> {
   String selectedCenterButton = "gps";
   bool isShowingTirePressure = false;
+  bool _isTireAnimating = false;
 
   void _selectCenterButton(String button) {
     if (button == "music") {
@@ -37,13 +38,10 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
       setState(
           () => selectedCenterButton = !isCurrentlyVisible ? "music" : "gps");
     } else if (button == "tire") {
-      // Toggle tire pressure display
+      if (!widget.isCarModelVisible || _isTireAnimating) return;
       _toggleTirePressure();
-      setState(() => selectedCenterButton = "tire");
     } else {
       setState(() => selectedCenterButton = button);
-
-      // Hide music player if visible
       if (widget.isMusicPlayerVisible) widget.onMusicButtonToggle(false);
     }
   }
@@ -54,31 +52,59 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
     setState(() {
       if (newState) {
         selectedCenterButton = "gps";
+      } else {
+        if (isShowingTirePressure) {
+          isShowingTirePressure = false;
+          toggleTirePressureVisibility(false);
+          final cameraController = context.read<CameraController>();
+          cameraController.setIsometricView();
+        }
+
+        if (selectedCenterButton == "tire") {
+          selectedCenterButton = "gps";
+        }
       }
     });
 
     widget.onCarButtonToggle(newState);
+
     if (newState && widget.isMusicPlayerVisible) {
       widget.onMusicButtonToggle(false);
     }
   }
 
-  void _toggleTirePressure() {
+  Future<void> _toggleTirePressure() async {
+    if (_isTireAnimating) return;
+
+    setState(() => _isTireAnimating = true);
+
     final cameraController = context.read<CameraController>();
-    isShowingTirePressure = !isShowingTirePressure;
-    if (isShowingTirePressure) {
-      cameraController.showTirePressure();
-      Future.delayed(const Duration(seconds: 1), () {
-        toggleTirePressureVisibility(true);
-      });
-    } else {
-      cameraController.setIsometricView();
-      toggleTirePressureVisibility(false);
+    final newState = !isShowingTirePressure;
+    isShowingTirePressure = newState;
+    setState(() => selectedCenterButton = newState ? "tire" : "gps");
+
+    try {
+      if (newState) {
+        Future.delayed(const Duration(seconds: 1), () {
+          toggleTirePressureVisibility(true);
+        });
+
+        await cameraController.showTirePressure();
+      } else {
+        toggleTirePressureVisibility(false);
+        await cameraController.setIsometricView();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isTireAnimating = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isTireButtonEnabled = widget.isCarModelVisible && !_isTireAnimating;
+
     return Container(
       height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
@@ -101,11 +127,6 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
                 onTap: _toggleCarButton,
                 activeColor: Colors.blueAccent,
               ),
-              CenterButton(
-                icon: Icons.location_on,
-                isSelected: selectedCenterButton == "gps",
-                onTap: () => _selectCenterButton("gps"),
-              ),
               const SizedBox(width: 12),
               CenterButton(
                 icon: Icons.music_note,
@@ -122,6 +143,7 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
               CenterButton(
                 icon: Icons.tire_repair,
                 isSelected: selectedCenterButton == "tire",
+                isEnabled: isTireButtonEnabled,
                 onTap: () => _selectCenterButton("tire"),
               ),
             ],
