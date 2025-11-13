@@ -13,18 +13,12 @@ class ModelLayout extends StatefulWidget {
 class ModelLayoutState extends State<ModelLayout> {
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return SizedBox(
-      width: double.infinity,
-      height: screenHeight,
-      child: Stack(
-        children: [
-          const ModelWidget(),
-          const Positioned(child: CarTopBar()),
-          TirePressureWidget()
-        ],
-      ),
+    return Stack(
+      children: [
+        const ModelWidget(),
+        const Positioned(child: CarTopBar()),
+        TirePressureWidget()
+      ],
     );
   }
 }

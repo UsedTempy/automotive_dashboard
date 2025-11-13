@@ -109,7 +109,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                 child: Offstage(
                   offstage: !_isCarModelVisible,
                   child: SizedBox(
-                    width: screenWidth / 3,
                     child: const ModelLayout(),
                   ),
                 ),

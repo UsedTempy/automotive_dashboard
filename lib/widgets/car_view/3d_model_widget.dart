@@ -16,8 +16,6 @@ class _ModelWidgetState extends State<ModelWidget> {
   List<three.AnimationAction> actions = [];
   List<String> animationNames = [];
   three.Object3D? modelRoot;
-  List<three.Mesh> headlightMeshes = [];
-  bool headlightsOn = false;
 
   final Map<three.Mesh, three.Material> originalMaterials = {};
 
@@ -39,7 +37,6 @@ class _ModelWidgetState extends State<ModelWidget> {
     final modelWidth = size.width / 3;
     final modelHeight = size.height;
     final cameraController = context.read<CameraController>();
-
 
     threeJs.camera = three.PerspectiveCamera(
       35,
@@ -67,8 +64,6 @@ class _ModelWidgetState extends State<ModelWidget> {
     modelRoot = gltfData.scene;
     threeJs.scene.add(modelRoot!);
 
-    setupHeadlights();
-
     if (gltfData.animations!.isNotEmpty) {
       mixer = three.AnimationMixer(modelRoot!);
       for (var clip in gltfData.animations!) {
@@ -86,52 +81,6 @@ class _ModelWidgetState extends State<ModelWidget> {
     threeJs.addAnimationEvent((dt) {
       if (mixer != null) mixer!.update(dt);
     });
-  }
-
-  void setupHeadlights() {
-    if (modelRoot == null) return;
-    headlightMeshes.clear();
-    modelRoot!.traverse((obj) {
-      if (obj is three.Mesh &&
-          (obj.name.toLowerCase() == 'left_headlight' ||
-              obj.name.toLowerCase() == 'right_headlight')) {
-        headlightMeshes.add(obj);
-        originalMaterials[obj] = obj.material!;
-        final light = three.PointLight(0xffffff, 0.0, 10.0);
-        obj.add(light);
-        obj.userData['light'] = light;
-      }
-    });
-  }
-
-  Future<void> toggleHeadlights() async {
-    if (headlightMeshes.isEmpty) return;
-    headlightsOn = !headlightsOn;
-    const maxLightIntensity = 0.5;
-    for (final mesh in headlightMeshes) {
-      if (headlightsOn) {
-        mesh.material = three.MeshStandardMaterial.fromMap({
-          'color': 0xffffff,
-          'metalness': 0.0,
-          'roughness': 0.1,
-        });
-      } else {
-        mesh.material = originalMaterials[mesh]!;
-        mesh.material!.needsUpdate = true;
-      }
-    }
-
-    for (double i = 0; i <= 1.0; i += 0.1) {
-      final factor = headlightsOn ? i : 1 - i;
-
-      for (final mesh in headlightMeshes) {
-        final light = mesh.userData['light'] as three.PointLight?;
-        if (light != null) light.intensity = factor * maxLightIntensity;
-      }
-      await Future.delayed(const Duration(milliseconds: 30));
-    }
-
-    setState(() {});
   }
 
   @override
