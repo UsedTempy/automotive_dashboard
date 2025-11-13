@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_fullscreen/flutter_fullscreen.dart';
 import 'package:provider/provider.dart';
+import 'package:touch_indicator/touch_indicator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +42,7 @@ class CarDashboardApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Dashboard Mockup',
       theme: ThemeData.dark(useMaterial3: true),
+      builder: (context, child) => TouchIndicator(child: child!),
       home: const DashboardScreen(),
     );
   }
