@@ -88,9 +88,12 @@ class _DashboardScreenState extends State<DashboardScreen>
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOutCubic,
-                width: _isMusicPlayerVisible ? (1280 / 3) : 0, // ⬅ 1/3 width
-                child: Offstage(
-                  offstage: !_isMusicPlayerVisible,
+                width: _isMusicPlayerVisible ? (screenWidth / 3) : 0,
+                child: Visibility(
+                  visible: _isMusicPlayerVisible,
+                  maintainState: false,
+                  maintainAnimation: false,
+                  maintainSize: false,
                   child: SizedBox(
                     width: screenWidth / 3,
                     child: const MusicPlayerLayout(),
@@ -126,7 +129,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
           // === Bottom Bar — stays on top ===
           Positioned(
-            width: 425,
+            width: screenWidth / 3,
             bottom: 0,
             child: BottomBarLayout(
               onMusicButtonToggle: _toggleMusicPlayer,

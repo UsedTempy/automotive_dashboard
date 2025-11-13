@@ -104,7 +104,6 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
   @override
   Widget build(BuildContext context) {
     final isTireButtonEnabled = widget.isCarModelVisible && !_isTireAnimating;
-
     return Container(
       height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
