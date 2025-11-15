@@ -7,6 +7,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class FlutterMapWidget extends StatefulWidget {
   const FlutterMapWidget({super.key});
@@ -17,6 +18,7 @@ class FlutterMapWidget extends StatefulWidget {
 
 class FlutterMapWidgetState extends State<FlutterMapWidget> {
   final MapController _mapController = MapController();
+  String appVersion = "loading...";
   LatLng? currentLocation;
   bool _isMapCentered = true;
   List<LatLng> routePoints = [];
@@ -33,7 +35,7 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
   @override
   void initState() {
     super.initState();
-
+    _loadVersion();
     if (!Platform.isLinux) {
       _getCurrentLocation();
     }
@@ -169,6 +171,13 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
         _isMapCentered = true;
       });
     }
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      appVersion = info.version;
+    });
   }
 
   double calculateBearing(LatLng start, LatLng end) {
@@ -390,6 +399,7 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
             left: 20,
             child: RecenterButton(onTap: _recenterMap),
           ),
+        Positioned(bottom: 0, right: 15, child: Text('build: $appVersion '))
       ],
     );
   }
