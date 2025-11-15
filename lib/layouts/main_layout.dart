@@ -23,7 +23,6 @@ class MainLayout extends StatelessWidget {
       alignment: Alignment.bottomCenter,
       children: [
         const NavigationScreen(),
-
         const IslandLayout(),
         const ProvidersIslandLayout(),
         //const CenterConsoleWidget(),

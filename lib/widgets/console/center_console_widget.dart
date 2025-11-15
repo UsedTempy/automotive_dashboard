@@ -63,7 +63,6 @@ class _CenterConsoleWidgetState extends State<CenterConsoleWidget>
       case LightMode.highBeam:
         return Colors.blue.shade300;
       case LightMode.off:
-      default:
         return Colors.white38;
     }
   }
@@ -78,7 +77,7 @@ class _CenterConsoleWidgetState extends State<CenterConsoleWidget>
     final rawOpacity = overspeed * 0.1;
     final opacity = rawOpacity.clamp(0.0, 0.5);
 
-    return Colors.red.withOpacity(opacity);
+    return Colors.red.withValues(alpha: opacity);
   }
 
   // --- Build Method ---
@@ -92,7 +91,7 @@ class _CenterConsoleWidgetState extends State<CenterConsoleWidget>
     final isSpeeding = widget.speed > widget.speedLimit;
 
     final speedTextColor =
-        isSpeeding ? warningColor.withOpacity(0.9) : Colors.white;
+        isSpeeding ? warningColor.withValues(alpha: 0.9) : Colors.white;
 
     final lightColor = _getLightColor(lightMode);
 
@@ -108,7 +107,7 @@ class _CenterConsoleWidgetState extends State<CenterConsoleWidget>
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withValues(alpha: 0.35),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -161,7 +160,7 @@ class _CenterConsoleWidgetState extends State<CenterConsoleWidget>
                               fontWeight: FontWeight.w900,
                               shadows: [
                                 Shadow(
-                                  color: Colors.black.withOpacity(0.5),
+                                  color: Colors.black.withValues(alpha: 0.5),
                                   offset: const Offset(0, 1),
                                   blurRadius: 2,
                                 ),

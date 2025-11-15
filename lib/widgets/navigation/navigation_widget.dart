@@ -6,7 +6,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-import 'package:uuid/uuid.dart';
 import 'package:geolocator/geolocator.dart';
 
 class Navigation extends StatefulWidget {
@@ -119,7 +118,7 @@ class _NavigationState extends State<Navigation> {
           '&language=en'
           '&limit=6'
           '&types=country,region,district,postcode,locality,place,neighborhood,address,poi,street,category'
-          '&proximity=${longPos},${latPos}');
+          '&proximity=$longPos,$latPos');
 
       final response = await http.get(url);
 
@@ -188,7 +187,7 @@ class _NavigationState extends State<Navigation> {
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.25),
+                    color: Colors.black.withValues(alpha: 0.25),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -276,7 +275,7 @@ class _NavigationState extends State<Navigation> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -290,7 +289,7 @@ class _NavigationState extends State<Navigation> {
                           child: Text(
                             'No results found',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                               fontSize: 12,
                             ),
                           ),

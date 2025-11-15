@@ -1,8 +1,9 @@
 import 'package:car_dashboard/controllers/camera_controller.dart';
-import 'package:car_dashboard/layouts/car_view_layout/3d_model_layout.dart';
+import 'package:car_dashboard/layouts/car_view_layout/model_layout.dart';
 import 'package:car_dashboard/layouts/music_player_layout.dart';
 import 'package:car_dashboard/layouts/bottom_bar_layout.dart';
 import 'package:car_dashboard/layouts/main_layout.dart';
+import 'package:car_dashboard/providers/update_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_fullscreen/flutter_fullscreen.dart';
@@ -26,8 +27,12 @@ void main() async {
   }
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => CameraController(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CameraController()),
+        ChangeNotifierProvider(
+            create: (_) => UpdateProvider()..checkForUpdate()),
+      ],
       child: const CarDashboardApp(),
     ),
   );

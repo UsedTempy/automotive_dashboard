@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -66,9 +68,8 @@ class SpotifyService {
     final response = await http.post(
       Uri.parse('https://accounts.spotify.com/api/token'),
       headers: {
-        'Authorization': 'Basic ' +
-            base64Encode(
-                utf8.encode('$SPOTIFY_CLIENT_ID:$SPOTIFY_CLIENT_SECRET')),
+        'Authorization':
+            'Basic ${base64Encode(utf8.encode('$SPOTIFY_CLIENT_ID:$SPOTIFY_CLIENT_SECRET'))}',
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: {

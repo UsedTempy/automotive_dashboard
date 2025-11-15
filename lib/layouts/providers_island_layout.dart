@@ -1,5 +1,8 @@
+import 'package:car_dashboard/providers/update_provider.dart';
 import 'package:car_dashboard/services/wifi_service.dart';
+import 'package:car_dashboard/widgets/updates/app_updater_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ProvidersIslandLayout extends StatefulWidget {
   const ProvidersIslandLayout({super.key});
@@ -44,10 +47,15 @@ class _ProvidersIslandLayoutState extends State<ProvidersIslandLayout> {
                 )
               ],
             ),
-            child: Icon(
-              hasInternet ? Icons.wifi : Icons.wifi_off,
-              size: 20,
-              color: hasInternet ? Colors.green : Colors.red,
+            child: Row(
+              children: [
+                Icon(
+                  hasInternet ? Icons.wifi : Icons.wifi_off,
+                  size: 20,
+                  color: hasInternet ? Colors.green : Colors.red,
+                ),
+                AppUpdaterWidget()
+              ],
             ),
           );
         },

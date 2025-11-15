@@ -1,4 +1,7 @@
+import 'package:car_dashboard/providers/update_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class IslandLayout extends StatefulWidget {
   const IslandLayout({super.key});
@@ -9,7 +12,7 @@ class IslandLayout extends StatefulWidget {
 
 class _IslandLayoutState extends State<IslandLayout> {
   late String currentTime;
-  
+
   @override
   void initState() {
     super.initState();
@@ -23,12 +26,15 @@ class _IslandLayoutState extends State<IslandLayout> {
     final now = DateTime.now();
 
     setState(() {
-      currentTime = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+      currentTime =
+          "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final updateProvider = context.watch<UpdateProvider>();
+
     return Positioned(
       top: 15,
       child: Container(
@@ -44,13 +50,28 @@ class _IslandLayoutState extends State<IslandLayout> {
             )
           ],
         ),
-        child: Text(
-          currentTime,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFFE0E0E0),
-          ),
+        child: Row(
+          children: [
+            Text(
+              currentTime,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFE0E0E0),
+              ),
+            ),
+            if (updateProvider.isUpdateAvailable && !updateProvider.isChecking)
+              IconButton(
+                onPressed: () {
+                  // TODO: Add logic to download or navigate to update page
+                },
+                icon: const Icon(
+                  Symbols.download,
+                  size: 22,
+                  color: Colors.amber,
+                ),
+              ),
+          ],
         ),
       ),
     );
