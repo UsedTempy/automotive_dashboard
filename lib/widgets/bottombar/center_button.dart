@@ -157,8 +157,8 @@ class _CenterButtonState extends State<CenterButton>
                     if (widget.imagePath != null) {
                       iconWidget = Image.asset(
                         widget.imagePath!,
-                        width: 22,
-                        height: 22,
+                        width: 45,
+                        height: 45,
                         color: widget.isSelected && widget.isEnabled
                             ? widget.activeColor
                             : _iconColorAnim.value,
@@ -166,7 +166,7 @@ class _CenterButtonState extends State<CenterButton>
                     } else {
                       iconWidget = FaIcon(
                         widget.icon!,
-                        size: 22,
+                        size: 28,
                         color: widget.isSelected && widget.isEnabled
                             ? widget.activeColor
                             : _iconColorAnim.value,

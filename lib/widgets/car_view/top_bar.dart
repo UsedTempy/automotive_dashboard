@@ -1,3 +1,4 @@
+import 'package:car_dashboard/widgets/car_view/gasoline_meter_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -13,31 +14,56 @@ class CarTopBarState extends State<CarTopBar> {
   Widget build(BuildContext context) {
     return Stack(children: [
       Container(
-        height: 150,
+        height: 140,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Text(
-                  maxLines: 1,
-                  overflow: TextOverflow.clip,
-                  '40',
-                  style: TextStyle(fontSize: 58),
-                )
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  maxLines: 1,
-                  overflow: TextOverflow.clip,
-                  'KM/H',
-                  style: TextStyle(
-                      fontSize: 18, color: Colors.white.withOpacity(0.5)),
-                )
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        Text('N', style: TextStyle(fontSize: 50)),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Symbols.auto_transmission,
+                          color: Colors.white.withOpacity(0.5),
+                        )
+                      ],
+                    )
+                  ],
+                ),
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          maxLines: 1,
+                          overflow: TextOverflow.clip,
+                          '40',
+                          style: TextStyle(fontSize: 50),
+                        )
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          maxLines: 1,
+                          overflow: TextOverflow.clip,
+                          'KM/H',
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.5)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox()
               ],
             ),
             Divider(
@@ -47,20 +73,15 @@ class CarTopBarState extends State<CarTopBar> {
         ),
       ),
       Positioned(
-          left: 50,
-          top: 25,
+          top: 0,
           child: Column(
             children: [
               Row(
                 children: [
-                  Text('N', style: TextStyle(fontSize: 35)),
-                ],
-              ),
-              Row(
-                children: [
-                  Icon(
-                    Symbols.auto_transmission,
-                    color: Colors.white.withOpacity(0.5),
+                  FuelMeter(
+                    currentLitres: 35,
+                    maxLitres: 47,
+                    showPercentage: false,
                   )
                 ],
               )

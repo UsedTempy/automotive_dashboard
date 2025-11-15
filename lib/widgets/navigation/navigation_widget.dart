@@ -182,7 +182,7 @@ class _NavigationState extends State<Navigation> {
           children: [
             // Search bar
             Container(
-              height: 36,
+              height: 50,
               decoration: BoxDecoration(
                 color: const Color(0xFF1E1E1E),
                 borderRadius: BorderRadius.circular(10),
@@ -210,9 +210,9 @@ class _NavigationState extends State<Navigation> {
                     const Icon(
                       Icons.search,
                       color: Color(0xFF9E9E9E),
-                      size: 14,
+                      size: 18,
                     ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 15),
                   Expanded(
                     child: TextField(
                       controller: _searchController,
@@ -226,8 +226,8 @@ class _NavigationState extends State<Navigation> {
                       decoration: const InputDecoration(
                         hintText: 'Navigate',
                         hintStyle: TextStyle(
-                          color: Color(0xFF9E9E9E),
-                          fontSize: 12.5,
+                          color: Color.fromARGB(255, 255, 255, 255),
+                          fontSize: 14,
                           fontWeight: FontWeight.w400,
                         ),
                         border: InputBorder.none,

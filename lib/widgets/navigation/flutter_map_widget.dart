@@ -313,11 +313,12 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
           ),
           children: [
             TileLayer(
+              tileDimension: 256,
+              maxZoom: 22,
               urlTemplate:
-                  "https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+                  "https://api.mapbox.com/styles/v1/joost-kraan/cmi0mx1cp004y01qxbikff87k/tiles/256/{z}/{x}/{y}?access_token={accessToken}",
               additionalOptions: {
                 'accessToken': dotenv.env["ACCESS_TOKEN"]!,
-                'id': 'dark-v11',
               },
             ),
             if (routePoints.isNotEmpty)

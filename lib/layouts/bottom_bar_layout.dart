@@ -114,38 +114,43 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
           bottom: BorderSide(color: Color(0xFF252525)),
         ),
       ),
-      child: Stack(
-        alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              CenterButton(
-                icon: Icons.directions_car,
-                isSelected: widget.isCarModelVisible,
-                onTap: _toggleCarButton,
-                activeColor: Colors.blueAccent,
-              ),
-              const SizedBox(width: 12),
-              CenterButton(
-                icon: Icons.music_note,
-                isSelected: selectedCenterButton == "music",
-                onTap: () => _selectCenterButton("music"),
-              ),
-              const SizedBox(width: 12),
-              CenterButton(
-                icon: Icons.photo_camera,
-                isSelected: selectedCenterButton == "camera",
-                onTap: () => _selectCenterButton("camera"),
-              ),
-              const SizedBox(width: 12),
-              CenterButton(
-                icon: Icons.tire_repair,
-                isSelected: selectedCenterButton == "tire",
-                isEnabled: isTireButtonEnabled,
-                onTap: () => _selectCenterButton("tire"),
-              ),
-            ],
+          CenterButton(
+            imagePath: 'assets/icons/ford.png',
+            // icon: Icons.directions_car,
+            isSelected: widget.isCarModelVisible,
+            onTap: _toggleCarButton,
+            activeColor: Colors.blueAccent,
+          ),
+          VerticalDivider(
+            width: 0,
+            thickness: 0.4,
+          ),
+          CenterButton(
+            icon: Icons.music_note,
+            isSelected: selectedCenterButton == "music",
+            onTap: () => _selectCenterButton("music"),
+          ),
+          VerticalDivider(
+            width: 0,
+            thickness: 0.4,
+          ),
+          CenterButton(
+            icon: Icons.photo_camera,
+            isSelected: selectedCenterButton == "camera",
+            onTap: () => _selectCenterButton("camera"),
+          ),
+          VerticalDivider(
+            width: 0,
+            thickness: 0.4,
+          ),
+          CenterButton(
+            icon: Icons.tire_repair,
+            isSelected: selectedCenterButton == "tire",
+            isEnabled: isTireButtonEnabled,
+            onTap: () => _selectCenterButton("tire"),
           ),
         ],
       ),
