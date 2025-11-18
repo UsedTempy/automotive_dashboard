@@ -1,4 +1,5 @@
 import 'package:car_dashboard/controllers/camera_controller.dart';
+import 'package:car_dashboard/controllers/keyboard_controller.dart';
 import 'package:car_dashboard/layouts/car_view_layout/model_layout.dart';
 import 'package:car_dashboard/layouts/music_player_layout.dart';
 import 'package:car_dashboard/layouts/bottom_bar_layout.dart';
@@ -10,6 +11,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_fullscreen/flutter_fullscreen.dart';
 import 'package:provider/provider.dart';
 import 'package:touch_indicator/touch_indicator.dart';
+import 'package:virtual_keyboard_multi_language/virtual_keyboard_multi_language.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +35,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => CameraController()),
         ChangeNotifierProvider(
             create: (_) => UpdateProvider()..checkForUpdate()),
+        ChangeNotifierProvider(create: (_) => KeyboardController()),
       ],
       child: const CarDashboardApp(),
     ),
@@ -84,68 +87,106 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
-      body: Stack(
-        children: [
-          Row(
-            children: [
-              // === Music Player Sidebar ===
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOutCubic,
-                width: _isMusicPlayerVisible ? (screenWidth / 3) : 0,
-                child: Visibility(
-                  visible: _isMusicPlayerVisible,
-                  maintainState: false,
-                  maintainAnimation: false,
-                  maintainSize: false,
-                  child: SizedBox(
-                    width: screenWidth / 3,
-                    child: const MusicPlayerLayout(),
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent, // <-- allows taps on empty space
+      onTap: () {
+        final k = context.read<KeyboardController>();
+        k.hide(); // hide virtual keyboard
+        FocusScope.of(context).unfocus(); // unfocus TextField
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0F0F0F),
+        body: Stack(
+          children: [
+            Row(
+              children: [
+                // === Music Player Sidebar ===
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOutCubic,
+                  width: _isMusicPlayerVisible ? (screenWidth / 3) : 0,
+                  child: Visibility(
+                    visible: _isMusicPlayerVisible,
+                    maintainState: false,
+                    maintainAnimation: false,
+                    maintainSize: false,
+                    child: SizedBox(
+                      width: screenWidth / 3,
+                      child: const MusicPlayerLayout(),
+                    ),
                   ),
                 ),
-              ),
 
-              // === 3D Car Model Sidebar ===
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOutCubic,
-                width: _isCarModelVisible ? (screenWidth / 3) : 0,
-                child: Offstage(
-                  offstage: !_isCarModelVisible,
-                  child: SizedBox(
-                    child: const ModelLayout(),
+                // === 3D Car Model Sidebar ===
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOutCubic,
+                  width: _isCarModelVisible ? (screenWidth / 3) : 0,
+                  child: Offstage(
+                    offstage: !_isCarModelVisible,
+                    child: SizedBox(
+                      child: const ModelLayout(),
+                    ),
                   ),
                 ),
-              ),
 
-              // === Main Content ===
-              Expanded(
-                child: MainLayout(
-                  onCarButtonToggle: _toggleCarModel,
-                  isCarModelVisible: _isCarModelVisible,
-                  onMusicButtonToggle: _toggleMusicPlayer,
-                  isMusicPlayerVisible: _isMusicPlayerVisible,
+                // === Main Content ===
+                Expanded(
+                  child: MainLayout(
+                    onCarButtonToggle: _toggleCarModel,
+                    isCarModelVisible: _isCarModelVisible,
+                    onMusicButtonToggle: _toggleMusicPlayer,
+                    isMusicPlayerVisible: _isMusicPlayerVisible,
+                  ),
                 ),
-              ),
-            ],
-          ),
-
-          // === Bottom Bar — stays on top ===
-          Positioned(
-            width: screenWidth / 3,
-            bottom: 0,
-            child: BottomBarLayout(
-              onMusicButtonToggle: _toggleMusicPlayer,
-              isMusicPlayerVisible: _isMusicPlayerVisible,
-              isCarModelVisible: _isCarModelVisible,
-              onCarButtonToggle: _toggleCarModel,
+              ],
             ),
-          ),
-          Positioned(
-              bottom: 5, left: (screenWidth / 3) + 15, child: MaxSpeedWidget())
-        ],
+
+            // === Bottom Bar — stays on top ===
+            Positioned(
+              width: screenWidth / 3,
+              bottom: 0,
+              child: BottomBarLayout(
+                onMusicButtonToggle: _toggleMusicPlayer,
+                isMusicPlayerVisible: _isMusicPlayerVisible,
+                isCarModelVisible: _isCarModelVisible,
+                onCarButtonToggle: _toggleCarModel,
+              ),
+            ),
+            Positioned(
+                bottom: 5,
+                left: (screenWidth / 3) + 15,
+                child: MaxSpeedWidget()),
+            Consumer<KeyboardController>(
+              builder: (context, keyboard, _) {
+                if (!keyboard.isVisible) return SizedBox.shrink();
+
+                return Positioned(
+                  bottom: 0,
+                  child: Container(
+                    color: const Color(0xFF0F0F0F),
+                    child: VirtualKeyboard(
+                      fontSize: 24,
+                      textColor: Colors.white,
+                      type: VirtualKeyboardType.Alphanumeric,
+                      postKeyPress: (key) {
+                        final k = context.read<KeyboardController>();
+
+                        if (key.keyType == VirtualKeyboardKeyType.String) {
+                          k.addText(key.text ?? "");
+                        } else if (key.keyType ==
+                                VirtualKeyboardKeyType.Action &&
+                            key.action == VirtualKeyboardKeyAction.Backspace) {
+                          k.backspace();
+                        }
+                      },
+                    ),
+                  ),
+                );
+              },
+            )
+          ],
+        ),
       ),
     );
   }

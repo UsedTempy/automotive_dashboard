@@ -23,7 +23,7 @@ class MaxSpeedWidgetState extends State<MaxSpeedWidget> {
         left: 6,
         child: CircleAvatar(
           radius: size - 6,
-          backgroundColor: Colors.white,
+          backgroundColor: const Color.fromARGB(255, 192, 192, 192),
           child: Text(
             '60',
             style: TextStyle(color: Colors.black, fontFamily: 'anwb'),

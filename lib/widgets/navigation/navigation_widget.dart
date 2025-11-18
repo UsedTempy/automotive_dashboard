@@ -1,3 +1,4 @@
+import 'package:car_dashboard/controllers/keyboard_controller.dart';
 import 'package:car_dashboard/services/navigation_service.dart';
 import 'package:car_dashboard/templates/searchResults.dart';
 import 'package:car_dashboard/widgets/navigation/search_item_widget.dart';
@@ -7,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 
 class Navigation extends StatefulWidget {
   final Function(double, double)? onNavigate; // Add callback
@@ -168,6 +170,8 @@ class _NavigationState extends State<Navigation> {
 
   @override
   Widget build(BuildContext context) {
+    KeyboardController controller = context.read<KeyboardController>();
+
     return Positioned(
       top: 20,
       left: 20,
@@ -216,6 +220,11 @@ class _NavigationState extends State<Navigation> {
                     child: TextField(
                       controller: _searchController,
                       focusNode: _focusNode,
+                      onTap: () {
+                        // Register the TextField with your KeyboardController
+                        controller.registerInput(_searchController);
+                        controller.show();
+                      },
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12.5,
