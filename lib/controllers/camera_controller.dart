@@ -70,7 +70,7 @@ class CameraController extends ChangeNotifier {
   Future<void> showTirePressure() async {
     await _animateCamera(
       targetPosition: three.Vector3(0, 10, -4),
-      targetLookAt: three.Vector3(0, 1.5, 0),
+      targetLookAt: three.Vector3(0, 0, 0),
       durationMs: 800,
       toggleTirePressureAfter: true,
     );

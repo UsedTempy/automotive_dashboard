@@ -16,23 +16,23 @@ class TirePressureWidget extends StatelessWidget {
           children: [
             _AnimatedTirePressureComponent(
               isVisible: isVisible,
-              top: 260,
+              top: 230,
               left: 40,
             ),
             _AnimatedTirePressureComponent(
               isVisible: isVisible,
-              bottom: 150,
-              left: 40,
-            ),
-            _AnimatedTirePressureComponent(
-              isVisible: isVisible,
-              top: 260,
+              top: 230,
               right: 40,
             ),
             _AnimatedTirePressureComponent(
               isVisible: isVisible,
-              bottom: 150,
-              right: 40,
+              bottom: 250,
+              left: 30,
+            ),
+            _AnimatedTirePressureComponent(
+              isVisible: isVisible,
+              bottom: 250,
+              right: 30,
             ),
           ],
         );

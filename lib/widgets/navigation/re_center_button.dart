@@ -56,7 +56,7 @@ class RecenterButtonState extends State<RecenterButton>
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: const Color(0xFF1C1C1C).withOpacity(0.9),
-                borderRadius: BorderRadius.circular(25), // Fully rounded
+                borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.3),
@@ -71,16 +71,7 @@ class RecenterButtonState extends State<RecenterButton>
                   Icon(
                     Icons.my_location,
                     color: Colors.blue,
-                    size: 16,
-                  ),
-                  SizedBox(width: 6),
-                  Text(
-                    'Re-center',
-                    style: TextStyle(
-                      color: Color(0xFFE0E0E0),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    size: 28,
                   ),
                 ],
               ),

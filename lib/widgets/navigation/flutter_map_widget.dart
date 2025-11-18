@@ -388,7 +388,7 @@ class FlutterMapWidgetState extends State<FlutterMapWidget> {
         ),
         if (currentLocation != null && !_isMapCentered)
           Positioned(
-            bottom: 85,
+            top: 85,
             left: 20,
             child: RecenterButton(onTap: _recenterMap),
           ),
