@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'dart:io';
+import 'package:car_dashboard/widgets/navigation/max_speed_widget.dart';
 import 'package:car_dashboard/widgets/navigation/re_center_button.dart';
 import 'package:car_dashboard/services/navigation_service.dart';
 import 'package:car_dashboard/widgets/updates/app_updater_widget.dart';

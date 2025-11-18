@@ -4,6 +4,7 @@ import 'package:car_dashboard/layouts/music_player_layout.dart';
 import 'package:car_dashboard/layouts/bottom_bar_layout.dart';
 import 'package:car_dashboard/layouts/main_layout.dart';
 import 'package:car_dashboard/providers/update_provider.dart';
+import 'package:car_dashboard/widgets/navigation/max_speed_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_fullscreen/flutter_fullscreen.dart';
@@ -142,6 +143,8 @@ class _DashboardScreenState extends State<DashboardScreen>
               onCarButtonToggle: _toggleCarModel,
             ),
           ),
+          Positioned(
+              bottom: 5, left: (screenWidth / 3) + 15, child: MaxSpeedWidget())
         ],
       ),
     );
