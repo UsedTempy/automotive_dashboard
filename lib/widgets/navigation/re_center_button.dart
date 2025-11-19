@@ -70,7 +70,7 @@ class RecenterButtonState extends State<RecenterButton>
                 children: [
                   Icon(
                     Icons.my_location,
-                    color: Colors.blue,
+                    color: Color(0xFF111111),
                     size: 28,
                   ),
                 ],

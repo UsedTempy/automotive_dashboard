@@ -173,61 +173,6 @@ class NavigationOverlay extends StatelessWidget {
               if (alternativeRoutes.length > 1)
                 const Divider(height: 1, color: Colors.white24),
 
-              // Transport mode buttons
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Transport Mode',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildModeButton(
-                          icon: Icons.traffic,
-                          label: 'Traffic',
-                          profile: 'driving-traffic',
-                          isSelected: currentProfile == 'driving-traffic',
-                          onTap: () => onProfileChanged('driving-traffic'),
-                        ),
-                        _buildModeButton(
-                          icon: Icons.directions_car,
-                          label: 'Driving',
-                          profile: 'driving',
-                          isSelected: currentProfile == 'driving',
-                          onTap: () => onProfileChanged('driving'),
-                        ),
-                        _buildModeButton(
-                          icon: Icons.directions_walk,
-                          label: 'Walking',
-                          profile: 'walking',
-                          isSelected: currentProfile == 'walking',
-                          onTap: () => onProfileChanged('walking'),
-                        ),
-                        _buildModeButton(
-                          icon: Icons.directions_bike,
-                          label: 'Cycling',
-                          profile: 'cycling',
-                          isSelected: currentProfile == 'cycling',
-                          onTap: () => onProfileChanged('cycling'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const Divider(height: 1, color: Colors.white24),
-
               // Turn by turn placeholder
               ListTile(
                 dense: true,

@@ -88,11 +88,17 @@ class _DashboardScreenState extends State<DashboardScreen>
     final screenWidth = MediaQuery.of(context).size.width;
 
     return GestureDetector(
-      behavior: HitTestBehavior.translucent, // <-- allows taps on empty space
-      onTap: () {
+      behavior: HitTestBehavior.translucent,
+      onTapDown: (details) {
         final k = context.read<KeyboardController>();
-        k.hide(); // hide virtual keyboard
-        FocusScope.of(context).unfocus(); // unfocus TextField
+
+        final screenHeight = MediaQuery.of(context).size.height;
+        const keyboardHeight = 300;
+
+        if (details.globalPosition.dy < screenHeight - keyboardHeight) {
+          k.hide();
+          FocusScope.of(context).unfocus();
+        }
       },
       child: Scaffold(
         backgroundColor: const Color(0xFF0F0F0F),
@@ -163,23 +169,28 @@ class _DashboardScreenState extends State<DashboardScreen>
 
                 return Positioned(
                   bottom: 0,
-                  child: Container(
-                    color: const Color(0xFF0F0F0F),
-                    child: VirtualKeyboard(
-                      fontSize: 24,
-                      textColor: Colors.white,
-                      type: VirtualKeyboardType.Alphanumeric,
-                      postKeyPress: (key) {
-                        final k = context.read<KeyboardController>();
+                  child: SizedBox(
+                    height: 300, // must match the height used above
+                    width: MediaQuery.of(context).size.width,
+                    child: Container(
+                      color: const Color(0xFF0F0F0F),
+                      child: VirtualKeyboard(
+                        fontSize: 24,
+                        textColor: Colors.white,
+                        type: VirtualKeyboardType.Alphanumeric,
+                        postKeyPress: (key) {
+                          final k = context.read<KeyboardController>();
 
-                        if (key.keyType == VirtualKeyboardKeyType.String) {
-                          k.addText(key.text ?? "");
-                        } else if (key.keyType ==
-                                VirtualKeyboardKeyType.Action &&
-                            key.action == VirtualKeyboardKeyAction.Backspace) {
-                          k.backspace();
-                        }
-                      },
+                          if (key.keyType == VirtualKeyboardKeyType.String) {
+                            k.addText(key.text ?? "");
+                          } else if (key.keyType ==
+                                  VirtualKeyboardKeyType.Action &&
+                              key.action ==
+                                  VirtualKeyboardKeyAction.Backspace) {
+                            k.backspace();
+                          }
+                        },
+                      ),
                     ),
                   ),
                 );

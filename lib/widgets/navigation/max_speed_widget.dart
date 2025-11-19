@@ -26,7 +26,10 @@ class MaxSpeedWidgetState extends State<MaxSpeedWidget> {
           backgroundColor: const Color.fromARGB(255, 192, 192, 192),
           child: Text(
             '60',
-            style: TextStyle(color: Colors.black, fontFamily: 'anwb'),
+            style: TextStyle(
+                color: Colors.black,
+                fontFamily: 'anwb',
+                fontWeight: FontWeight.bold),
           ),
         ),
       ),
